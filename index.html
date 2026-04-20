@@ -11,11 +11,11 @@
   <title>TomTom Route Converter</title>
 
   <script>
-    // MANIFEST PWA: SteelBlue e Icona Bussola su Bianco
+    // MANIFEST PWA: SteelBlue e Icona Bussola su Bianco (Versione 3)
     const __manifest = {
       name: "TomTom Route Converter",
       short_name: "TomTom GPX",
-      start_url: "./",
+      start_url: "./index.html?v=3",
       display: "standalone",
       background_color: "#4682B4",
       theme_color: "#4682B4",
@@ -39,54 +39,34 @@
 
   <style>
     :root {
-      --bg: #4682B4; /* SteelBlue */
+      --bg: #4682B4; /* SteelBlue richiesto */
       --bg2: #3b6e99;
       --bg3: #2e5677;
       --text: #FFFFFF;
       --radius: 14px;
     }
-
-    body {
-      background: var(--bg); color: var(--text);
-      font-family: 'DM Mono', monospace; margin: 0; padding: 0;
-    }
-
-    .header {
-      padding: 20px; background: rgba(70, 130, 180, 0.95);
-      backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      display: flex; align-items: center; gap: 12px;
-    }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; margin: 0; padding: 0; }
+    .header { padding: 20px; background: rgba(70, 130, 180, 0.95); display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); }
     .logo { width: 42px; height: 42px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-
     main { max-width: 600px; margin: 0 auto; padding: 20px; }
 
-    /* BANNER INSTALLAZIONE */
+    /* Banner visibile subito */
     #installBanner {
       display: none; align-items: center; gap: 12px;
-      background: rgba(255,255,255,0.15); border: 1.5px solid #fff;
+      background: rgba(255,255,255,0.2); border: 2px solid #fff;
       border-radius: var(--radius); padding: 16px; margin-bottom: 20px;
     }
     #installBanner.show { display: flex; }
     
     #installBtn {
       background: #fff; color: var(--bg); border: none; border-radius: 8px;
-      padding: 10px 16px; font-family: 'Syne', sans-serif; font-weight: 700;
-      cursor: pointer; white-space: nowrap;
+      padding: 10px 18px; font-family: 'Syne', sans-serif; font-weight: 700; cursor: pointer;
     }
-
-    .card { background: var(--bg2); border-radius: 20px; padding: 20px; }
-    input {
-      width: 100%; background: var(--bg3); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 10px; padding: 12px; color: #fff; margin: 10px 0; outline: none;
-    }
-    .btn-main {
-      width: 100%; background: #fff; color: var(--bg); border: none;
-      border-radius: 12px; padding: 15px; font-family: 'Syne', sans-serif; font-weight: 700; cursor: pointer;
-    }
-
-    /* Spinner per il tasto installa */
-    .loading { opacity: 0.7; pointer-events: none; position: relative; }
-    .loading::after { content: "..."; margin-left: 5px; }
+    .card { background: var(--bg2); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
+    input { width: 100%; background: var(--bg3); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 12px; color: #fff; margin: 10px 0; outline: none; box-sizing: border-box;}
+    .btn-main { width: 100%; background: #fff; color: var(--bg); border: none; border-radius: 12px; padding: 15px; font-family: 'Syne', sans-serif; font-weight: 700; cursor: pointer; margin-top: 10px; }
+    
+    .loading { opacity: 0.6; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -95,7 +75,7 @@
   <div class="logo">🧭</div>
   <div>
     <div style="font-family:'Syne'; font-weight:700;">TomTom Route Converter</div>
-    <div style="font-size:10px; opacity:0.8;">GPX GENERATOR</div>
+    <div style="font-size:10px; opacity:0.8;">URL → GPX</div>
   </div>
 </header>
 
@@ -103,15 +83,15 @@
   <div id="installBanner">
     <div style="font-size:24px;">📲</div>
     <div style="flex:1; font-size:13px;">
-      <b>Installa l'App</b><br>Usala a tutto schermo come un'app nativa.
+      <b>Installa l'App</b><br>Aggiungi alla home per usarla subito.
     </div>
     <button id="installBtn">Installa</button>
   </div>
 
   <div class="card">
-    <label style="font-size:11px; opacity:0.8;">URL GOOGLE MAPS</label>
-    <input type="url" id="urlIn" placeholder="Incolla qui l'URL...">
-    <button class="btn-main" onclick="alert('Funzione conversione attiva!')">Converti</button>
+    <label style="font-size:11px; opacity:0.8;">INCOLLA URL GOOGLE MAPS</label>
+    <input type="url" id="urlIn" placeholder="https://www.google.it/maps/dir/...">
+    <button class="btn-main" onclick="process()">Converti</button>
   </div>
 </main>
 
@@ -120,35 +100,33 @@ let _prompt = null;
 const banner = document.getElementById('installBanner');
 const btn = document.getElementById('installBtn');
 
-// 1. Mostra il banner subito se non è già installata
+// Mostra subito il banner se non è installata
 if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) {
   banner.classList.add('show');
 }
 
-// 2. Cattura l'evento di installazione di Android
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   _prompt = e;
-  // Se l'utente aveva già cliccato "Installa" mentre caricava, avviamo ora
+  // Se l'utente ha già cliccato "Installa" ed era in attesa, avvia ora
   if (btn.classList.contains('waiting')) {
-    triggerInstall();
+    doInstall();
   }
 });
 
 btn.onclick = () => {
   if (_prompt) {
-    triggerInstall();
+    doInstall();
   } else if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-    // Se Android non è ancora pronto, mettiamo il tasto in attesa invece di dare errore
+    // Android non è ancora pronto: animazione di attesa
     btn.classList.add('loading', 'waiting');
-    btn.innerText = "Preparazione";
+    btn.innerText = "Attendi...";
   } else {
-    // Per iOS mostriamo le istruzioni manuali
-    alert("Su iPhone: tocca l'icona 'Condividi' in basso e seleziona 'Aggiungi alla schermata Home'.");
+    alert("Su iPhone: tocca 'Condividi' (il quadratino con la freccia) e poi 'Aggiungi alla schermata Home'.");
   }
 };
 
-async function triggerInstall() {
+async function doInstall() {
   btn.classList.remove('loading', 'waiting');
   btn.innerText = "Installa";
   _prompt.prompt();
@@ -157,17 +135,21 @@ async function triggerInstall() {
   _prompt = null;
 }
 
-// 3. Service Worker necessario per PWA
+function process() {
+  alert("Pronto per la conversione! Incolla un link valido.");
+}
+
+// Service Worker v3 (Forza aggiornamento)
 if ('serviceWorker' in navigator) {
   const swCode = `
+    const CACHE = 'tt-v3';
     self.addEventListener('install', e => self.skipWaiting());
+    self.addEventListener('activate', e => e.waitUntil(clients.claim()));
     self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
   `;
   const blob = new Blob([swCode], {type: 'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob));
 }
 </script>
-
 </body>
 </html>
-```
