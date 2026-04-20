@@ -44,7 +44,7 @@
 
   <style>
     :root {
-      /* ─── NUOVO TEMA STEELBLUE ───────────────────────────── */
+      /* ─── TEMA STEELBLUE ───────────────────────────── */
       --bg:       #4682B4;        /* SteelBlue richiesto */
       --bg2:      #1E3A5F;        /* Card: blu scuro per contrasto */
       --bg3:      #162E47;        /* Input: ancora più scuro */
@@ -88,7 +88,7 @@
     .header {
       position: sticky; top: 0; z-index: 50;
       padding: calc(var(--safe-t) + 14px) clamp(16px, 4vw, 40px) 14px;
-      background: rgba(30, 58, 95, 0.92); /* Più scuro per contrasto su SteelBlue */
+      background: rgba(30, 58, 95, 0.92);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(53, 94, 124, 0.7);
@@ -99,7 +99,7 @@
     }
     .logo {
       width: 42px; height: 42px; flex-shrink: 0;
-      background: #FFFFFF; /* Quadrato bianco per icona */
+      background: #FFFFFF;
       border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
       font-size: 24px;
@@ -614,29 +614,55 @@ function download() {
   document.body.removeChild(a); URL.revokeObjectURL(a.href);
 }
 
-// ── PWA LOGIC: Banner visibile SUBITO all'avvio ─────────────────
+// ── PWA LOGIC INTELLIGENTE: Banner con fallback ─────────────────
 let _prompt = null;
+let _bannerShown = false;
 
-function initPWA() {
-  // Se l'app è già installata (standalone), non mostriamo il banner
-  if (isStandalone()) return;
-
+function showBannerWithInstructions(manual) {
+  if (_bannerShown) return;
+  _bannerShown = true;
+  
   const banner = $('installBanner');
   const btn = $('installBtn');
   const txt = banner.querySelector('.ib-text');
-
-  // ✅ MOSTRA IL BANNER IMMEDIATAMENTE ALL'AVVIO
+  
+  if (manual) {
+    // Istruzioni manuali per browser che non supportano beforeinstallprompt
+    btn.style.display = 'none';
+    txt.innerHTML = "<b>Installa l'app</b>Usa il menu del browser (⋮ o ≡) e seleziona 'Installa app' o 'Aggiungi a schermata home'.";
+  }
   banner.classList.add('show');
+}
+
+function initPWA() {
+  // Se l'app è già installata, non mostrare nulla
+  if (isStandalone()) return;
 
   if (isIOS()) {
+    // iOS: mostra subito il banner con istruzioni manuali
+    const banner = $('installBanner');
+    const btn = $('installBtn');
+    const txt = banner.querySelector('.ib-text');
+    
     btn.style.display = 'none';
     txt.innerHTML = "<b>Installa su iPhone</b>Tocca l'icona di condivisione <img src='https://upload.wikimedia.org/wikipedia/commons/d/d1/IOS_Share_Icon.svg' style='height:16px; vertical-align:middle; filter: brightness(0) invert(1);'> e seleziona 'Aggiungi a Home'.";
+    banner.classList.add('show');
+    _bannerShown = true;
   } else {
-    // Android: cattura l'evento beforeinstallprompt quando disponibile
+    // Desktop/Android: attendi l'evento beforeinstallprompt
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       _prompt = e;
+      // Mostra il banner SOLO quando l'evento è pronto
+      showBannerWithInstructions(false);
     });
+    
+    // Fallback: dopo 3 secondi, se l'evento non è arrivato, mostra istruzioni manuali
+    setTimeout(() => {
+      if (!_prompt && !_bannerShown) {
+        showBannerWithInstructions(true);
+      }
+    }, 3000);
   }
 }
 
@@ -646,12 +672,14 @@ $('installBtn').addEventListener('click', async () => {
     const { outcome } = await _prompt.userChoice;
     _prompt = null;
     if (outcome === 'accepted') $('installBanner').classList.remove('show');
-  } else if (!isIOS()) {
-    alert("Il browser sta preparando l'installazione. Attendi qualche secondo e riprova!");
   }
+  // Se non c'è _prompt, l'utente ha già le istruzioni manuali visibili
 });
 
-window.addEventListener('appinstalled', () => $('installBanner').classList.remove('show'));
+window.addEventListener('appinstalled', () => {
+  $('installBanner').classList.remove('show');
+  _bannerShown = false;
+});
 
 // Eseguiamo il controllo PWA all'avvio della pagina
 initPWA();
