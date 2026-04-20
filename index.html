@@ -12,7 +12,7 @@
   <title>TomTom Route Converter</title>
 
   <script>
-    // PWA Manifest con icona ridotta (50%) e centrata
+    // PWA Manifest con icona SVG disegnata (non emoji)
     const __manifest = {
       name: "TomTom Route Converter",
       short_name: "TomTom GPX",
@@ -23,7 +23,7 @@
       theme_color: "#0B1120",
       orientation: "portrait-primary",
       icons: [{
-        src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230B1120'/><text y='.95em' font-size='200' x='156'>🧭</text></svg>",
+        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230B1120'/%3E%3Ccircle cx='256' cy='256' r='180' fill='none' stroke='%233B82F6' stroke-width='12'/%3E%3Cpolygon points='256,120 280,220 256,240 232,220' fill='%23EF4444'/%3E%3Cpolygon points='256,392 232,292 256,272 280,292' fill='%2310B981'/%3E%3Ccircle cx='256' cy='256' r='20' fill='%23F59E0B'/%3E%3C/svg%3E",
         sizes: "512x512",
         type: "image/svg+xml",
         purpose: "any maskable"
@@ -36,8 +36,8 @@
     document.currentScript.parentNode.insertBefore(__link, document.currentScript);
   </script>
   
-  <!-- Apple touch icon con emoji ridotta e centrata -->
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230B1120'/><text y='.95em' font-size='200' x='156'>🧭</text></svg>"/>
+  <!-- Apple touch icon con bussola SVG disegnata -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230B1120'/%3E%3Ccircle cx='256' cy='256' r='180' fill='none' stroke='%233B82F6' stroke-width='12'/%3E%3Cpolygon points='256,120 280,220 256,240 232,220' fill='%23EF4444'/%3E%3Cpolygon points='256,392 232,292 256,272 280,292' fill='%2310B981'/%3E%3Ccircle cx='256' cy='256' r='20' fill='%23F59E0B'/%3E%3C/svg%3E"/>
   
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -102,7 +102,7 @@
       background: linear-gradient(135deg,#1D4ED8,#3B82F6);
       border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; /* Ridotto da 21px a 18px per coerenza */
+      font-size: 24px;
       box-shadow: 0 4px 14px rgba(59,130,246,.38);
     }
     .header-title {
@@ -531,7 +531,7 @@ function addLog(msg, t='dim') {
   $('logEl').scrollTop = 9999;
 }
 
-// ── MAIN ──────────────────────────────────────────────────────────
+// ── MAIN ─────────────────────────────────────────────────────────
 async function go() {
   const urlVal  = $('urlIn').value.trim();
   const nameVal = $('nameIn').value.trim() || 'La mia rotta';
