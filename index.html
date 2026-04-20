@@ -12,7 +12,7 @@
   <title>TomTom Route Converter</title>
 
   <script>
-    // PWA Manifest injected dynamically for maximum compatibility
+    // PWA Manifest con icona ridotta (50%) e centrata
     const __manifest = {
       name: "TomTom Route Converter",
       short_name: "TomTom GPX",
@@ -23,7 +23,7 @@
       theme_color: "#0B1120",
       orientation: "portrait-primary",
       icons: [{
-        src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230B1120'/><text y='.9em' font-size='400' x='56'>🧭</text></svg>",
+        src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230B1120'/><text y='.95em' font-size='200' x='156'>🧭</text></svg>",
         sizes: "512x512",
         type: "image/svg+xml",
         purpose: "any maskable"
@@ -35,7 +35,10 @@
     __link.href = URL.createObjectURL(__blob);
     document.currentScript.parentNode.insertBefore(__link, document.currentScript);
   </script>
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230B1120'/><text y='.9em' font-size='400' x='56'>🧭</text></svg>"/>
+  
+  <!-- Apple touch icon con emoji ridotta e centrata -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230B1120'/><text y='.95em' font-size='200' x='156'>🧭</text></svg>"/>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
@@ -99,7 +102,7 @@
       background: linear-gradient(135deg,#1D4ED8,#3B82F6);
       border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 21px;
+      font-size: 18px; /* Ridotto da 21px a 18px per coerenza */
       box-shadow: 0 4px 14px rgba(59,130,246,.38);
     }
     .header-title {
@@ -627,8 +630,12 @@ function download() {
 // ── PWA INSTALL (Android) ─────────────────────────────────────────
 let _prompt = null;
 window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); _prompt = e;
-  $('installBanner').classList.add('show');
+  e.preventDefault(); 
+  _prompt = e;
+  // Mostra il banner solo su Android Chrome
+  if (!isIOS()) {
+    $('installBanner').classList.add('show');
+  }
 });
 $('installBtn').addEventListener('click', async () => {
   if (!_prompt) return;
