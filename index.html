@@ -23,7 +23,7 @@
       theme_color: "#4682B4",
       orientation: "portrait-primary",
       icons: [{
-        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23FFFFFF'/%3E%3Ccircle cx='256' cy='256' r='180' fill='none' stroke='%234682B4' stroke-width='12'/%3E%3Cpolygon points='256,120 280,220 256,240 232,220' fill='%23EF4444'/%3E%3Cpolygon points='256,392 232,292 256,272 280,292' fill='%2310B981'/%3E%3Ccircle cx='256' cy='256' r='20' fill='%23F59E0B'/%3E%3C/svg%3E",
+        src: "image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23FFFFFF'/%3E%3Ccircle cx='256' cy='256' r='180' fill='none' stroke='%234682B4' stroke-width='12'/%3E%3Cpolygon points='256,120 280,220 256,240 232,220' fill='%23EF4444'/%3E%3Cpolygon points='256,392 232,292 256,272 280,292' fill='%2310B981'/%3E%3Ccircle cx='256' cy='256' r='20' fill='%23F59E0B'/%3E%3C/svg%3E",
         sizes: "512x512",
         type: "image/svg+xml",
         purpose: "any maskable"
@@ -36,7 +36,7 @@
     document.currentScript.parentNode.insertBefore(__link, document.currentScript);
   </script>
   
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23FFFFFF'/%3E%3Ccircle cx='256' cy='256' r='180' fill='none' stroke='%234682B4' stroke-width='12'/%3E%3Cpolygon points='256,120 280,220 256,240 232,220' fill='%23EF4444'/%3E%3Cpolygon points='256,392 232,292 256,272 280,292' fill='%2310B981'/%3E%3Ccircle cx='256' cy='256' r='20' fill='%23F59E0B'/%3E%3C/svg%3E"/>
+  <link rel="apple-touch-icon" href="image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23FFFFFF'/%3E%3Ccircle cx='256' cy='256' r='180' fill='none' stroke='%234682B4' stroke-width='12'/%3E%3Cpolygon points='256,120 280,220 256,240 232,220' fill='%23EF4444'/%3E%3Cpolygon points='256,392 232,292 256,272 280,292' fill='%2310B981'/%3E%3Ccircle cx='256' cy='256' r='20' fill='%23F59E0B'/%3E%3C/svg%3E"/>
   
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -135,9 +135,10 @@
       background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
       border: 1px solid rgba(255,255,255,0.35);
       border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px;
+      position: relative;
     }
     #installBanner.show { display: flex; }
-    #installBanner .ib-text { flex:1; font-size:12.5px; line-height:1.65; color:var(--text); }
+    #installBanner .ib-text { flex:1; font-size:12.5px; line-height:1.65; color:var(--text); padding-right: 24px; }
     #installBanner .ib-text b { color:#FFFFFF; display:block; margin-bottom:2px; }
     #installBanner button {
       background: var(--accent); color:#1E3A5F; border:none;
@@ -145,6 +146,15 @@
       font-family:'Syne',sans-serif; font-weight:700; font-size:12px;
       cursor:pointer; white-space:nowrap; flex-shrink:0;
     }
+    .banner-close {
+      position: absolute; top: 8px; right: 10px;
+      width: 24px; height: 24px; background: rgba(255,255,255,0.1);
+      border: none; border-radius: 50%; color: var(--text3);
+      font-size: 14px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .banner-close:hover { background: rgba(255,255,255,0.2); }
 
     /* ─── INFO BOX ─────────────────────────────────────────── */
     .info {
@@ -353,6 +363,7 @@
   <main>
 
     <div id="installBanner">
+      <button class="banner-close" onclick="closeBanner()" aria-label="Chiudi">✕</button>
       <div style="font-size:26px;flex-shrink:0">📲</div>
       <div class="ib-text">
         <b>Installa come App</b>
@@ -614,55 +625,49 @@ function download() {
   document.body.removeChild(a); URL.revokeObjectURL(a.href);
 }
 
-// ── PWA LOGIC INTELLIGENTE: Banner con fallback ─────────────────
+// ── PWA LOGIC: Banner SOLO se installabile + pulsante ✕ ─────────
 let _prompt = null;
 let _bannerShown = false;
 
-function showBannerWithInstructions(manual) {
+function showBanner() {
   if (_bannerShown) return;
   _bannerShown = true;
-  
-  const banner = $('installBanner');
-  const btn = $('installBtn');
-  const txt = banner.querySelector('.ib-text');
-  
-  if (manual) {
-    // Istruzioni manuali per browser che non supportano beforeinstallprompt
-    btn.style.display = 'none';
-    txt.innerHTML = "<b>Installa l'app</b>Usa il menu del browser (⋮ o ≡) e seleziona 'Installa app' o 'Aggiungi a schermata home'.";
-  }
-  banner.classList.add('show');
+  $('installBanner').classList.add('show');
+}
+
+function closeBanner() {
+  $('installBanner').classList.remove('show');
+  _bannerShown = true; // Evita riapertura
 }
 
 function initPWA() {
-  // Se l'app è già installata, non mostrare nulla
+  // Se già installata, non mostrare nulla
   if (isStandalone()) return;
 
   if (isIOS()) {
-    // iOS: mostra subito il banner con istruzioni manuali
+    // iOS: mostra subito con istruzioni "condividi → Aggiungi a Home"
     const banner = $('installBanner');
     const btn = $('installBtn');
     const txt = banner.querySelector('.ib-text');
     
     btn.style.display = 'none';
     txt.innerHTML = "<b>Installa su iPhone</b>Tocca l'icona di condivisione <img src='https://upload.wikimedia.org/wikipedia/commons/d/d1/IOS_Share_Icon.svg' style='height:16px; vertical-align:middle; filter: brightness(0) invert(1);'> e seleziona 'Aggiungi a Home'.";
-    banner.classList.add('show');
-    _bannerShown = true;
+    showBanner();
   } else {
-    // Desktop/Android: attendi l'evento beforeinstallprompt
+    // Desktop/Android: mostra SOLO quando beforeinstallprompt arriva
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       _prompt = e;
-      // Mostra il banner SOLO quando l'evento è pronto
-      showBannerWithInstructions(false);
+      showBanner();
     });
     
-    // Fallback: dopo 3 secondi, se l'evento non è arrivato, mostra istruzioni manuali
+    // Se dopo 4 secondi non c'è prompt, NON mostrare il banner
+    // (il browser non supporta l'installazione o non è HTTPS)
     setTimeout(() => {
-      if (!_prompt && !_bannerShown) {
-        showBannerWithInstructions(true);
+      if (!_prompt) {
+        _bannerShown = true; // Blocca future apparizioni
       }
-    }, 3000);
+    }, 4000);
   }
 }
 
@@ -671,15 +676,11 @@ $('installBtn').addEventListener('click', async () => {
     _prompt.prompt();
     const { outcome } = await _prompt.userChoice;
     _prompt = null;
-    if (outcome === 'accepted') $('installBanner').classList.remove('show');
+    if (outcome === 'accepted') closeBanner();
   }
-  // Se non c'è _prompt, l'utente ha già le istruzioni manuali visibili
 });
 
-window.addEventListener('appinstalled', () => {
-  $('installBanner').classList.remove('show');
-  _bannerShown = false;
-});
+window.addEventListener('appinstalled', () => closeBanner());
 
 // Eseguiamo il controllo PWA all'avvio della pagina
 initPWA();
