@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-"/>
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <meta name="theme-color" content="#1e5aa8"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -357,7 +357,12 @@ Per KMZ: toccalo e scegli "Apri con Google Earth".
 </div>
 <script>
 const $ = id => document.getElementById(id);
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const esc = s => String(s)
+  .replace(/&/g,'&amp;')
+  .replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;')
+  .replace(/'/g,'&apos;');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
 let _output = '', _name = '', _currentFormat = 'gpx';
@@ -365,8 +370,8 @@ let _currentWaypoints = [];
 let _currentRoutePoints = null;
 let _wpLimit = 48;
 let _map = null;
-let _history = JSON.parse(localStorage.getItem('routeConvHistory') || '[]');
-let _undoState = null; // { wps: [], route: null, fmt: string }
+let _history = [];
+try { _history = JSON.parse(localStorage.getItem('routeConvHistory') || '[]'); } catch(e) { _history = []; }
 function clearField(inputId, btnId) {
 $(inputId).value = '';
 $(btnId).classList.remove('on');
@@ -395,7 +400,11 @@ $('dlLabel').textContent = 'Scarica ' + _name.replace(/\s+/g,'_') + '.' + _curre
 $('dlLabel').textContent = 'Scarica ' + _name.replace(/\s+/g,'_') + '.' + _currentFormat;
 }
 }
-function updateHowtoLabels() { /* Placeholder se necessario */ }
+function updateHowtoLabels() {
+  const isGpx = _currentFormat === 'gpx';
+  const title = document.querySelector('.howto-title');
+  if (title) title.textContent = isGpx ? '✅ Importazione GPX (TomTom)' : '🌍 Importazione KMZ (Google Earth)';
+}
 $('fileInput').addEventListener('change', function(e) {
 const file = e.target.files[0];
 if(file) {
@@ -447,7 +456,7 @@ function saveToHistory() {
 const entry = { name: _name, url: $('urlIn').value, wps: _currentWaypoints.length, fmt: _currentFormat, ts: Date.now() };
 _history.unshift(entry);
 if(_history.length > 5) _history.pop();
-localStorage.setItem('routeConvHistory', JSON.stringify(_history));
+try { localStorage.setItem('routeConvHistory', JSON.stringify(_history)); } catch(e) {}
 }
 document.addEventListener('click', (e) => {
 if(!e.target.closest('#historyDropdown')) $('historyList').classList.remove('open');
@@ -569,25 +578,86 @@ for (let i = 1; i < filtered.length - 1; i++) { const angle = calculateTurningAn
 angularKept.push(filtered[filtered.length - 1]);
 let result = angularKept;
 if (result.length > _wpLimit) {
-const step = (result.length - 2) / (_wpLimit - 2);
-const capped = [result[0]]; for (let i = 1; i < _wpLimit - 1; i++) capped.push(result[Math.round(i * step)]); capped.push(result[result.length - 1]);
-result = capped;
-addLog(`⛔ Limite modello (${_wpLimit}): ridotto a ${result.length} tappe`, 'warn');
-}
+      let tolerance = 0.00001;
+      let decimated = result;
+      while (decimated.length > _wpLimit && tolerance < 0.01) {
+        decimated = douglasPeucker(result, tolerance);
+        tolerance *= 1.8;
+      }
+      // fallback sicuro: se D-P non converge, tronca preservando start/end
+      if (decimated.length > _wpLimit) {
+        const step = (decimated.length - 2) / (_wpLimit - 2);
+        const capped = [decimated[0]];
+        for (let i = 1; i < _wpLimit - 1; i++) capped.push(decimated[Math.round(i * step)]);
+        capped.push(decimated[decimated.length - 1]);
+        decimated = capped;
+      }
+      result = decimated;
+      addLog(`⛔ Limite modello (${_wpLimit}): ridotto a ${result.length} tappe (D-P tol=${tolerance.toFixed(5)})`, 'warn');
+    }
 return result;
 }
-function perpendicularDistance(point, lineStart, lineEnd) { const dx = lineEnd.lon - lineStart.lon, dy = lineEnd.lat - lineStart.lat; const mag = Math.sqrt(dx * dx + dy * dy); if(mag === 0) return Math.sqrt((point.lon - lineStart.lon)**2 + (point.lat - lineStart.lat)**2); const u = ((point.lon - lineStart.lon)*dx + (point.lat - lineStart.lat)*dy) / (mag * mag); const x = lineStart.lon + u * dx, y = lineStart.lat + u * dy; return Math.sqrt((point.lon - x)**2 + (point.lat - y)**2); }
+function perpendicularDistance(point, lineStart, lineEnd) {
+  const R = 6371000;
+  const latMid = (lineStart.lat + lineEnd.lat) / 2 * Math.PI / 180;
+  const toX = lon => lon * Math.PI / 180 * R * Math.cos(latMid);
+  const toY = lat => lat * Math.PI / 180 * R;
+  const px = toX(point.lon),   py = toY(point.lat);
+  const ax = toX(lineStart.lon), ay = toY(lineStart.lat);
+  const bx = toX(lineEnd.lon),   by = toY(lineEnd.lat);
+  const dx = bx - ax, dy = by - ay;
+  const mag = Math.sqrt(dx*dx + dy*dy);
+  if (mag === 0) return Math.sqrt((px-ax)**2 + (py-ay)**2);
+  const u = ((px-ax)*dx + (py-ay)*dy) / (mag*mag);
+  const cx = ax + u*dx, cy = ay + u*dy;
+  return Math.sqrt((px-cx)**2 + (py-cy)**2);
+}
 function douglasPeucker(points, tolerance) { if(points.length <= 2) return points; let maxDist = 0, maxIndex = 0; const start = points[0], end = points[points.length - 1]; for(let i = 1; i < points.length - 1; i++) { const dist = perpendicularDistance(points[i], start, end); if(dist > maxDist) { maxDist = dist; maxIndex = i; } } if(maxDist > tolerance) { const left = douglasPeucker(points.slice(0, maxIndex + 1), tolerance); const right = douglasPeucker(points.slice(maxIndex), tolerance); return left.slice(0, -1).concat(right); } else { return [start, end]; } }
-async function fetchOSRMRoute(waypoints) {
-const coords = waypoints.map(w => w.lon + ',' + w.lat).join(';');
-const url = 'https://router.project-osrm.org/route/v1/driving/' + coords + '?overview=full&geometries=geojson&alternatives=false';
-const r = await fetch(url); if(!r.ok) throw new Error('Errore OSRM');
-const data = await r.json(); if(!data.routes || !data.routes[0] || !data.routes[0].geometry) throw new Error('Impossibile ricostruire percorso');
-return {
-points: data.routes[0].geometry.coordinates.map(c => ({ lon: c[0], lat: c[1] })),
-distance: data.routes[0].distance,
-duration: data.routes[0].duration
-};
+async function fetchRoute(waypoints) {
+  // ── Tentativo 1: Valhalla OSM (motorcycle profile) ──
+  try {
+    const locations = waypoints.map(w => ({ lon: w.lon, lat: w.lat }));
+    const body = JSON.stringify({
+      locations,
+      costing: 'motorcycle',
+      directions_options: { units: 'km' },
+      shape_format: 'geojson'
+    });
+    const r = await fetch('https://valhalla.openstreetmap.de/route', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+    if (r.ok) {
+      const data = await r.json();
+      const shape = data?.trip?.legs?.flatMap(l => l.shape?.coordinates ?? []) ?? [];
+      if (shape.length > 0) {
+        addLog('Routing: Valhalla motorcycle ✓', 'ok');
+        const distance = data.trip.summary.length * 1000;
+        const duration = data.trip.summary.time;
+        return {
+          points: shape.map(c => ({ lon: c[0], lat: c[1] })),
+          distance,
+          duration
+        };
+      }
+    }
+  } catch(e) { addLog('Valhalla non raggiungibile, fallback OSRM…', 'info'); }
+
+  // ── Tentativo 2: OSRM demo (fallback) ──
+  const coords = waypoints.map(w => w.lon + ',' + w.lat).join(';');
+  const url = 'https://router.project-osrm.org/route/v1/driving/' + coords +
+              '?overview=full&geometries=geojson&alternatives=false';
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Errore OSRM');
+  const data = await r.json();
+  if (!data.routes?.[0]?.geometry) throw new Error('Impossibile ricostruire percorso');
+  addLog('Routing: OSRM driving (fallback) ✓', 'info');
+  return {
+    points: data.routes[0].geometry.coordinates.map(c => ({ lon: c[0], lat: c[1] })),
+    distance: data.routes[0].distance,
+    duration: data.routes[0].duration
+  };
 }
 // ==================== BUILDERS ====================
 function buildGPX(wps, name, routePoints = null) {
@@ -704,7 +774,7 @@ _currentWaypoints.splice(index, 1);
 addLog(`Tappa eliminata: "${waypointName}" (ora ${_currentWaypoints.length} tappe)`, 'ok');
 $('convertBtn').disabled = true; $('bIcon').innerHTML = '<div class="spin"></div>'; $('bText').textContent = 'Rigenerazione…';
 if (_currentFormat === 'kmz' && _currentWaypoints.length >= 2) {
-try { const osrm = await fetchOSRMRoute(_currentWaypoints); _currentRoutePoints = osrm.points; } catch { _currentRoutePoints = null; }
+try { const osrm = await fetchRoute(_currentWaypoints); _currentRoutePoints = osrm.points; } catch { _currentRoutePoints = null; }
 } else if(_currentFormat === 'gpx') { _currentRoutePoints = null; }
 await regenerateOutputFromCurrentWaypoints();
 refreshInteractiveWaypointsDisplay(true);
@@ -798,11 +868,11 @@ wps = motoOptimize(wps, sourceType);
 let routePoints = null; let dist = 0, dur = 0;
 if(_currentFormat === 'kmz') {
 addLog('Ricostruzione percorso stradale (OSRM)…', 'info'); setProgress(60);
-const osrm = await fetchOSRMRoute(wps); routePoints = osrm.points; dist = osrm.distance; dur = osrm.duration; setProgress(85);
+const osrm = await fetchRoute(wps); routePoints = osrm.points; dist = osrm.distance; dur = osrm.duration; setProgress(85);
 } else if(_currentFormat === 'gpx') {
 // GPX also fetches OSRM for stats if desired, but prompt says KMZ uses it. We'll keep stats for both if possible.
 try {
-const osrm = await fetchOSRMRoute(wps);
+const osrm = await fetchRoute(wps);
 dist = osrm.distance; dur = osrm.duration;
 routePoints = osrm.points; // Optional for GPX tracking
 } catch { /* silent fail for stats */ }
@@ -835,6 +905,37 @@ document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revok
 }
 // ── INIT ───────────────────────────────────────
 document.querySelectorAll('.fmt-btn').forEach(btn => { btn.addEventListener('click', () => setFormat(btn.dataset.fmt)); });
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'route-conv-v10';
+    const PRECACHE = [
+      'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+      'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+      'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+    ];
+    self.addEventListener('install', e => e.waitUntil(
+      caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+    ));
+    self.addEventListener('activate', e => e.waitUntil(
+      caches.keys().then(keys => Promise.all(
+        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+      )).then(() => self.clients.claim())
+    ));
+    self.addEventListener('fetch', e => {
+      if (e.request.url.includes('nominatim') ||
+          e.request.url.includes('valhalla') ||
+          e.request.url.includes('osrm') ||
+          e.request.url.includes('openstreetmap.org/') ) return;
+      e.respondWith(
+        caches.match(e.request).then(cached => cached || fetch(e.request))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  navigator.serviceWorker.register(URL.createObjectURL(blob), { scope: './' })
+    .catch(() => {});
+}
 setFormat('gpx'); updateModelLimit();
 if(isIOS()) $('iosHint').classList.add('on');
 </script>
