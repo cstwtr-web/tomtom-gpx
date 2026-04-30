@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Route Converter"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="description" content="Converti URL Google Maps, Apple Maps, Waze o file GPX/KMZ in rotte ottimizzate per TomTom MyDrive"/>
-<title>Route Converter By Valter - PWA v10</title>
+<title>Route Converter By Valter - PWA v14</title>
 <!-- ██ CDN SWEETALERT2, JSZIP, LEAFLET ██ -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -134,8 +134,9 @@ input::placeholder { color: var(--text-muted); font-size: .85em; }
 .btn-convert { width: 100%; background: var(--p); color: #fff; border: none; border-radius: 16px; padding: clamp(15px,3vw,18px); font-family: 'Syne', sans-serif; font-weight: 700; font-size: clamp(14px,3vw,16px); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(30,90,168,.3); transition: opacity .2s, transform .12s, background .2s; position: relative; overflow: hidden; margin-top: 8px; }
 .btn-convert:active:not(:disabled) { transform: scale(.98); background: var(--p-hover); }
 .btn-convert:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-.btn-download { width: 100%; background: var(--success); color: #fff; border: none; border-radius: 16px; padding: clamp(15px,3vw,18px); font-family: 'Syne', sans-serif; font-weight: 700; font-size: clamp(14px,3vw,16px); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(16,185,129,.25); transition: transform .12s; margin-bottom: 16px; }
+.btn-download { width: 100%; background: var(--success); color: #fff; border: none; border-radius: 16px; padding: clamp(15px,3vw,18px); font-family: 'Syne', sans-serif; font-weight: 700; font-size: clamp(14px,3vw,16px); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(16,185,129,.25); transition: transform .12s; margin-bottom: 12px; }
 .btn-download:active { transform: scale(.98); }
+
 #progressCard { display: none; }
 #progressCard.on { display: block; }
 .prog-title { font-size: 10.5px; color: var(--p); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; font-weight: 600; }
@@ -172,7 +173,11 @@ input::placeholder { color: var(--text-muted); font-size: .85em; }
 #results { display: none; }
 #results.on { display: block; }
 .sec-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 8px; padding-left: 2px; font-weight: 600; display: flex; align-items: center; }
-.wp-list { background: var(--input-bg); border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow); }
+.wp-list { background: var(--input-bg); border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow); max-height: 450px; overflow-y: auto; }
+.wp-list::-webkit-scrollbar { width: 5px; }
+.wp-list::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
+.wp-list::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 10px; transition: background .2s; }
+.wp-list::-webkit-scrollbar-thumb:hover { background: var(--border); }
 .wp-row { display: flex; align-items: center; gap: 13px; padding: 12px 16px; border-bottom: 1px solid var(--border-light); position: relative; transition: background .15s; }
 .wp-row:last-child { border-bottom: none; }
 .wp-row[draggable="true"] { cursor: grab; }
@@ -237,7 +242,7 @@ outline: none;
 <div class="header-title">Route Converter By Valter</div>
 <div class="header-sub">Ottimizzato per TomTom Rider</div>
 </div>
-<div class="header-pill">v10</div>
+<div class="header-pill">v14</div>
 </div>
 </header>
 <main>
@@ -349,9 +354,12 @@ Per KMZ: toccalo e scegli "Apri con Google Earth".
 <span class="sm-icon"></span>
 <div class="sm-body"><strong></strong><span class="sm-detail"></span></div>
 </div>
+
+<!-- ── DOWNLOAD STANDARD ── -->
 <button class="btn-download" id="dlBtn" onclick="download()">
 <span>💾</span> <span id="dlLabel">Scarica File</span>
 </button>
+
 </div>
 </main>
 </div>
@@ -895,19 +903,23 @@ $('progressCard').classList.remove('on'); $('errorTxt').textContent = err.messag
 btn.disabled = false; $('bIcon').textContent = '▶'; $('bText').textContent = _currentFormat === 'gpx' ? 'Esporta per TomTom' : 'Esporta per Google Earth';
 }
 }
+// ==================== DOWNLOAD STANDARD ====================
 function download() {
 if(!_output) return;
 Swal.fire({ icon: 'success', title: `Download avviato ✓`, html: `<strong>${esc(_name)}.${_currentFormat}</strong><br>${_currentWaypoints.length} tappe · Formato ${_currentFormat.toUpperCase()}`, timer: 2000, showConfirmButton: false, toast: true, position: 'top-end' });
 const fn = _name.replace(/\s+/g,'_') + '.' + _currentFormat;
 const blob = _currentFormat === 'kmz' ? _output : new Blob([_output], { type: 'application/gpx+xml' });
-const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: fn });
-document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+const _dlUrl = URL.createObjectURL(blob);
+const a = Object.assign(document.createElement('a'), { href: _dlUrl, download: fn });
+document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(_dlUrl), 30000);
 }
+
+
 // ── INIT ───────────────────────────────────────
 document.querySelectorAll('.fmt-btn').forEach(btn => { btn.addEventListener('click', () => setFormat(btn.dataset.fmt)); });
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE = 'route-conv-v10';
+    const CACHE = 'route-conv-v14';
     const PRECACHE = [
       'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
