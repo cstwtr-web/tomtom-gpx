@@ -373,6 +373,10 @@ const esc = s => String(s)
   .replace(/'/g,'&apos;');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
+// ── DRAG GUARD: impedisce al browser di aprire i file trascinati fuori dalla drop-zone
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop',     (e) => e.preventDefault());
+
 let _output = '', _name = '', _currentFormat = 'gpx';
 let _currentWaypoints = [];
 let _currentRoutePoints = null;
@@ -413,6 +417,34 @@ function updateHowtoLabels() {
   const title = document.querySelector('.howto-title');
   if (title) title.textContent = isGpx ? '✅ Importazione GPX (TomTom)' : '🌍 Importazione KMZ (Google Earth)';
 }
+
+// ── FILE DROP-ZONE: gestione drag & drop sul riquadro ──
+(function() {
+  const zone = $('fileBtn');
+  zone.addEventListener('dragover',  (e) => { e.preventDefault(); e.stopPropagation(); zone.classList.add('has-file'); e.dataTransfer.dropEffect = 'copy'; });
+  zone.addEventListener('dragenter', (e) => { e.preventDefault(); e.stopPropagation(); zone.classList.add('has-file'); });
+  zone.addEventListener('dragleave', (e) => {
+    // evita flickering quando si passa su un figlio
+    if (!zone.contains(e.relatedTarget)) zone.classList.remove('has-file');
+  });
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    zone.classList.remove('has-file');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['gpx','kmz','kml','xml'].includes(ext)) {
+      Swal.fire({ icon:'warning', title:'Formato non supportato', text:'Trascina un file .gpx, .kmz o .kml', confirmButtonColor:'#1e5aa8' });
+      return;
+    }
+    // Inietta il file nell'input nativo così il listener 'change' già esistente lo gestisce
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    $('fileInput').files = dt.files;
+    $('fileInput').dispatchEvent(new Event('change'));
+  });
+})();
+
 $('fileInput').addEventListener('change', function(e) {
 const file = e.target.files[0];
 if(file) {
