@@ -9,45 +9,12 @@
 <meta name="apple-mobile-web-app-title" content="Route Converter"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="description" content="Converti URL Google Maps, Apple Maps, Waze o file GPX/KMZ in rotte ottimizzate per TomTom MyDrive - Editor GIS Reattivo"/>
-<title>Route Converter By Valter - v15 (MyDrive 2026 Ready)</title>
-<!-- ██ CDN SWEETALERT2, JSZIP, LEAFLET ██ -->
+<title>Route Converter By Valter - v16.2 (7 Bug Fixed)</title>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
-<script>
-// ── GENERAZIONE ICONA PNG DINAMICA & MANIFEST CORRETTO ──
-(function(){
-const c = document.createElement('canvas');
-c.width = 512; c.height = 512;
-const ctx = c.getContext('2d');
-ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,512,512);
-ctx.beginPath(); ctx.arc(256,256,180,0,Math.PI*2); ctx.strokeStyle='#1e5aa8'; ctx.lineWidth=12; ctx.stroke();
-ctx.beginPath(); ctx.moveTo(256,120); ctx.lineTo(280,220); ctx.lineTo(232,220); ctx.closePath(); ctx.fillStyle='#2c7dc3'; ctx.fill();
-ctx.beginPath(); ctx.moveTo(256,392); ctx.lineTo(232,292); ctx.lineTo(280,292); ctx.closePath(); ctx.fillStyle='#10B981'; ctx.fill();
-ctx.beginPath(); ctx.arc(256,256,20,0,Math.PI*2); ctx.fillStyle='#f59e0b'; ctx.fill();
-const iconPng = c.toDataURL('image/png');
-const appleLink = document.createElement('link');
-appleLink.rel = 'apple-touch-icon';
-appleLink.href = iconPng;
-document.head.appendChild(appleLink);
-const manifest = {
-name: "Route Converter By Valter",
-short_name: "TomTom GPX",
-description: "Converti URL o file in GPX/KMZ per TomTom - Editor GIS",
-start_url: "./",
-display: "standalone",
-background_color: "#e0f0ff",
-theme_color: "#1e5aa8",
-icons: [{ src: iconPng, sizes: "512x512", type: "image/png", purpose: "any maskable" }]
-};
-const manifestLink = document.createElement('link');
-manifestLink.rel = 'manifest';
-manifestLink.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
-document.head.appendChild(manifestLink);
-})();
-</script>
 <style>
 :root {
 --p: #1e5aa8; --p-hover: #164a8a; --p-light: #e6f0ff;
@@ -79,7 +46,6 @@ border-bottom: 1px solid rgba(255,255,255,0.15);
 main { max-width: 720px; margin: 0 auto; width: 100%; padding: clamp(18px,4vw,36px) clamp(14px,4vw,36px) calc(clamp(18px,4vw,36px) + var(--safe-b)); }
 .info { background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px; font-size: clamp(11.5px,2vw,13px); line-height: 1.75; color: var(--text-sec); box-shadow: var(--shadow); }
 .info b { color: var(--text-main); }
-.info code { color: var(--success); background: var(--success-bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
 .accordion-card { background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow); overflow: hidden; }
 .accordion-card summary { padding: 14px 18px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--p); user-select: none; }
 .accordion-card summary::-webkit-details-marker { display: none; }
@@ -176,8 +142,9 @@ input::placeholder { color: var(--text-muted); font-size: .85em; }
 #results { display: none; }
 #results.on { display: block; }
 .sec-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 8px; padding-left: 2px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
-.wp-count-badge { font-size: 10px; background: var(--p-light); padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+.wp-count-badge { font-size: 10px; background: var(--p-light); padding: 2px 8px; border-radius: 20px; margin-left: 8px; color: var(--p); }
 .wp-count-badge.critical { background: var(--error-bg); color: var(--error); }
+.wp-count-badge.warning { background: var(--warning-bg); color: var(--warning); }
 .wp-count-badge.ok { background: var(--success-bg); color: var(--success); }
 .wp-list { background: var(--input-bg); border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow); max-height: 450px; overflow-y: auto; }
 .wp-list::-webkit-scrollbar { width: 5px; }
@@ -201,7 +168,6 @@ input::placeholder { color: var(--text-muted); font-size: .85em; }
 .wp-name { font-size: clamp(12px,2.5vw,14px); color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; cursor: pointer; }
 .wp-name:hover { color: var(--p); text-decoration: underline; }
 .wp-name.editing { overflow: visible; }
-/* TOOLTIP HOVER (Cloude) */
 .wp-row.intermediate .wp-name::after {
 content: "Clicca per rinominare • Trascina per spostare";
 position: absolute; bottom: 100%; left: 0;
@@ -225,7 +191,6 @@ width: 100%; padding: 4px 6px; border: 1.5px solid var(--p); border-radius: 6px;
 background: var(--p-light); color: var(--text-main); font-family: inherit; font-size: inherit;
 outline: none;
 }
-/* Animazione eliminazione Cloude */
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 .wp-deleting { animation: pulse 0.3s ease-in-out; opacity: 0.5; pointer-events: none; }
 #iosHint { display: none; }
@@ -246,13 +211,14 @@ outline: none;
 <div class="header-title">Route Converter By Valter</div>
 <div class="header-sub">GIS Editor Reattivo · TomTom MyDrive (2026)</div>
 </div>
-<div class="header-pill">v15</div>
+<div class="header-pill">v16.2</div>
 </div>
 </header>
 <main>
 <div class="info">
 ⚠️ <b>IMPORTANTE:</b> TomTom MyDrive attuale accetta massimo <b>29 waypoint</b> (inclusi partenza e arrivo). Il tool rispetta questo limite.
 <br>📌 <b>Editor GIS Reattivo:</b> modifica tappe, trascina, rinomina, aggiungi punti: la mappa e il file si aggiornano in tempo reale.
+<br>🔧 <b>v16.2 FIX:</b> 7 bug risolti: badge CSS, extractName scope, invalidateSize timing, fetch timeout, rate-limit backoff, motoOptimize su rtept.
 </div>
 <details class="accordion-card">
 <summary>📖 Come importare nel navigatore / Google Earth</summary>
@@ -359,8 +325,7 @@ outline: none;
 </div>
 <script>
 // ███████████████████████████████████████████████████████████████████████████
-// Route Converter By Valter v15 - MyDrive 2026 Edition (Merge Deepseek + Cloude)
-// GIS Reattivo con State-Driven Architecture - Limite aggiornato a 29 waypoint
+// Route Converter By Valter v16.2 - 7 BUG FIXED
 // ███████████████████████████████████████████████████████████████████████████
 
 const $ = id => document.getElementById(id);
@@ -378,6 +343,7 @@ let _name = 'La mia rotta';
 let _currentFormat = 'gpx';
 let _wpLimit = 29;
 let _map = null;
+let _tileLayerRef = null;
 let _pendingRouting = null;
 let _history = [];
 
@@ -408,26 +374,341 @@ function setFormat(fmt) {
 }
 document.querySelectorAll('.fmt-btn').forEach(btn => { btn.addEventListener('click', () => setFormat(btn.dataset.fmt)); });
 
-// ██ ROUTING ENGINE con AbortController (Deepseek) ██
-async function fetchRoute(waypoints, signal = null) {
-  if(!waypoints || waypoints.length < 2) return null;
-  try {
-    const locations = waypoints.map(w => ({ lon: w.lon, lat: w.lat }));
-    const body = JSON.stringify({ locations, costing: 'motorcycle', directions_options: { units: 'km' }, shape_format: 'geojson' });
-    const r = await fetch('https://valhalla.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: signal });
-    if(r.ok) {
-      const data = await r.json();
-      const shape = data?.trip?.legs?.flatMap(l => l.shape?.coordinates ?? []) ?? [];
-      if(shape.length > 0) return { points: shape.map(c => ({ lon: c[0], lat: c[1] })), distance: data.trip.summary.length * 1000, duration: data.trip.summary.time };
+// ██ DECODER POLYLINE6 ██
+function decodePolyline6(encoded) {
+  const factor = 1e6;
+  const coords = [];
+  let index = 0, lat = 0, lng = 0;
+  while (index < encoded.length) {
+    let b, shift = 0, result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+    shift = 0; result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+    coords.push({ lat: lat / factor, lon: lng / factor });
+  }
+  return coords;
+}
+
+// ██ FUNZIONE DI SUPPORTO: estrae elementi con namespace ██
+function getElementsByTagNameNS(doc, localName) {
+  // Metodo 1: getElementsByTagName standard (funziona con namespace)
+  const elements = doc.getElementsByTagName(localName);
+  if (elements.length > 0) return Array.from(elements);
+  
+  // Metodo 2: cerca tra tutti gli elementi quelli che finiscono con localName
+  const allElements = doc.getElementsByTagName('*');
+  const result = [];
+  for (let el of allElements) {
+    const tagName = el.tagName.toLowerCase();
+    if (tagName === localName || tagName.endsWith(':' + localName)) {
+      result.push(el);
     }
-  } catch(e) { /* fallback */ }
-  const coords = waypoints.map(w => w.lon + ',' + w.lat).join(';');
-  const url = 'https://router.project-osrm.org/route/v1/driving/' + coords + '?overview=full&geometries=geojson';
-  const r = await fetch(url, { signal: signal || undefined });
-  if(!r.ok) throw new Error('Routing fallito');
-  const data = await r.json();
-  if(!data.routes?.[0]?.geometry) throw new Error('Nessuna geometria');
-  return { points: data.routes[0].geometry.coordinates.map(c => ({ lon: c[0], lat: c[1] })), distance: data.routes[0].distance, duration: data.routes[0].duration };
+  }
+  return result;
+}
+
+function getElementTextContent(el, tagName) {
+  // Cerca il tag indipendentemente dal namespace
+  const found = getElementsByTagNameNS(el.ownerDocument || el, tagName);
+  for (let child of found) {
+    if (el === child || el.contains(child)) {
+      return child.textContent;
+    }
+  }
+  // Cerca anche come child diretto
+  for (let child of el.children) {
+    if (child.tagName.toLowerCase() === tagName || child.tagName.toLowerCase().endsWith(':' + tagName)) {
+      return child.textContent;
+    }
+  }
+  return null;
+}
+
+// ██ FIXED GPX PARSER - senza XPath nel CSS ██
+function parseGPXRobust(xmlStr) {
+  xmlStr = xmlStr.replace(/^\uFEFF/, '');
+  
+  let doc;
+  try {
+    doc = new DOMParser().parseFromString(xmlStr, "text/xml");
+    const parserError = doc.querySelector('parsererror');
+    if (parserError) {
+      throw new Error('Errore sintassi XML: ' + parserError.textContent);
+    }
+  } catch(e) {
+    throw new Error('Impossibile parsare il file XML: ' + e.message);
+  }
+  
+  const waypoints = [];
+  
+  const extractLatLon = (el) => {
+    let lat = null, lon = null;
+    
+    if (el.hasAttribute('lat') && el.hasAttribute('lon')) {
+      lat = parseFloat(el.getAttribute('lat'));
+      lon = parseFloat(el.getAttribute('lon'));
+    } else {
+      for (let i = 0; i < el.attributes.length; i++) {
+        const attr = el.attributes[i];
+        const val = parseFloat(attr.value);
+        if (!isNaN(val)) {
+          const name = attr.name.toLowerCase();
+          if (name.includes('lat')) lat = val;
+          if (name.includes('lon')) lon = val;
+        }
+      }
+    }
+    
+    if (lat === null || lon === null) {
+      const text = el.textContent;
+      const coordMatch = text.match(/(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)/);
+      if (coordMatch) {
+        lat = parseFloat(coordMatch[1]);
+        lon = parseFloat(coordMatch[2]);
+      }
+    }
+    
+    return { lat, lon };
+  };
+  
+  const extractName = (el) => {
+    // BUG FIX: cerca SOLO nei discendenti di `el`, non nell'intero `doc`.
+    // Il bug originale cercava in tutto il documento con getElementsByTagNameNS(doc,'name')
+    // e poi verificava el.contains(): restituiva il primo <name> del doc (titolo rotta)
+    // invece di quello del waypoint corrente.
+
+    // 1. Child diretto (caso piu' comune e piu' veloce)
+    for (let child of el.children) {
+      const tag = child.tagName.toLowerCase();
+      if (tag === 'name' || tag.endsWith(':name')) {
+        const t = child.textContent ? child.textContent.trim() : null;
+        if (t) return t;
+      }
+    }
+    // 2. Discendente con getElementsByTagName (scoped sull'elemento, non sul doc)
+    const byTag = el.getElementsByTagName('name');
+    if (byTag.length > 0 && byTag[0].textContent && byTag[0].textContent.trim())
+      return byTag[0].textContent.trim();
+    // 3. Namespace wildcard (es. gpx:name, ns0:name...)
+    for (let node of el.getElementsByTagName('*')) {
+      if (node.tagName.toLowerCase().endsWith(':name') && node.textContent && node.textContent.trim())
+        return node.textContent.trim();
+    }
+    return null;
+  };
+  
+  // 1. <rtept>
+  const rtepts = getElementsByTagNameNS(doc, 'rtept');
+  if (rtepts.length > 0) {
+    addLog(`📍 Trovati ${rtepts.length} waypoint da tag <rtept>`, 'ok');
+    for (let pt of rtepts) {
+      const { lat, lon } = extractLatLon(pt);
+      if (!isNaN(lat) && !isNaN(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+        let name = extractName(pt);
+        if (!name) {
+          const desc = getElementTextContent(pt, 'desc');
+          name = desc ? desc.trim() : `Tappa ${waypoints.length + 1}`;
+        }
+        waypoints.push({ lat, lon, name: name.substring(0, 50) });
+      }
+    }
+    if (waypoints.length > 0) return { waypoints, sourceType: 'rtept' };
+  }
+  
+  // 2. <wpt>
+  const wpts = getElementsByTagNameNS(doc, 'wpt');
+  if (wpts.length > 0) {
+    addLog(`📍 Trovati ${wpts.length} waypoint da tag <wpt>`, 'ok');
+    for (let pt of wpts) {
+      const { lat, lon } = extractLatLon(pt);
+      if (!isNaN(lat) && !isNaN(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+        let name = extractName(pt);
+        if (!name) {
+          const desc = getElementTextContent(pt, 'desc');
+          name = desc ? desc.trim() : `Punto ${waypoints.length + 1}`;
+        }
+        waypoints.push({ lat, lon, name: name.substring(0, 50) });
+      }
+    }
+    if (waypoints.length >= 2) return { waypoints, sourceType: 'wpt' };
+  }
+  
+  // 3. <trkpt> - estrai inizio, fine e campiona
+  const trkpts = getElementsByTagNameNS(doc, 'trkpt');
+  if (trkpts.length > 0) {
+    addLog(`📍 Trovati ${trkpts.length} track point - estrazione start/end + sampling`, 'info');
+    const points = [];
+    for (let pt of trkpts) {
+      const { lat, lon } = extractLatLon(pt);
+      if (!isNaN(lat) && !isNaN(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+        points.push({ lat, lon });
+      }
+    }
+    if (points.length > 0) {
+      waypoints.push({ lat: points[0].lat, lon: points[0].lon, name: 'Partenza' });
+      if (points.length > 1) {
+        waypoints.push({ lat: points[points.length-1].lat, lon: points[points.length-1].lon, name: 'Destinazione' });
+      }
+      if (points.length > 10 && points.length <= 50) {
+        const step = Math.floor(points.length / 8);
+        for (let i = step; i < points.length - 1; i += step) {
+          const idx = waypoints.length - 1;
+          waypoints.splice(idx, 0, { lat: points[i].lat, lon: points[i].lon, name: `Via ${waypoints.length}` });
+        }
+      }
+      return { waypoints, sourceType: 'trkpt' };
+    }
+  }
+  
+  if (waypoints.length === 0) {
+    throw new Error('Nessun waypoint valido trovato nel file GPX. Verifica che il file contenga tag <rtept>, <wpt> o <trkpt> con coordinate valide.');
+  }
+  
+  return { waypoints, sourceType: 'unknown' };
+}
+
+// ██ ROUTING ENGINE ██
+async function fetchSingleRoute(waypoints, signal) {
+    if(!waypoints || waypoints.length < 2) return null;
+    // Helper: combina il segnale di abort esterno con un timeout locale
+    const makeSignal = (ms) => {
+        const tc = new AbortController();
+        const tid = setTimeout(() => tc.abort(), ms);
+        const combined = AbortSignal.any ? AbortSignal.any([signal, tc.signal]) : tc.signal;
+        return { combined, clear: () => clearTimeout(tid) };
+    };
+    try {
+        const { combined: valSignal, clear: valClear } = makeSignal(10000);
+        const locations = waypoints.map(w => ({ lon: w.lon, lat: w.lat }));
+        const body = JSON.stringify({
+            locations,
+            costing: 'motorcycle',
+            directions_options: { units: 'km' }
+        });
+        let r;
+        try {
+            r = await fetch('https://valhalla.openstreetmap.de/route', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body,
+                signal: valSignal
+            });
+        } finally { valClear(); }
+        if(r.ok) {
+            const data = await r.json();
+            const allCoords = [];
+            for(const leg of (data?.trip?.legs ?? [])) {
+                if(typeof leg.shape === 'string' && leg.shape.length > 0) {
+                    allCoords.push(...decodePolyline6(leg.shape));
+                }
+            }
+            if(allCoords.length > 0) {
+                return {
+                    points: allCoords,
+                    distance: (data.trip.summary?.length ?? 0) * 1000,
+                    duration: data.trip.summary?.time ?? 0
+                };
+            }
+        }
+    } catch(e) {
+        if(signal?.aborted) throw Object.assign(new DOMException('Aborted','AbortError'), {});
+        addLog('⚠️ Valhalla non disponibile, fallback OSRM...', 'dim');
+    }
+    // --- Fallback OSRM con timeout 15s ---
+    const { combined: osrmSignal, clear: osrmClear } = makeSignal(15000);
+    try {
+        const coords = waypoints.map(w => w.lon + ',' + w.lat).join(';');
+        const url = 'https://router.project-osrm.org/route/v1/driving/' + coords
+                  + '?overview=full&geometries=geojson';
+        const r = await fetch(url, { signal: osrmSignal });
+        if(!r.ok) throw new Error('fetchOSRM: HTTP ' + r.status);
+        const data = await r.json();
+        if(!data.routes?.[0]?.geometry?.coordinates?.length) throw new Error('fetchOSRM: nessuna geometria');
+        return {
+            points: data.routes[0].geometry.coordinates.map(c => ({ lon: c[0], lat: c[1] })),
+            distance: data.routes[0].distance,
+            duration: data.routes[0].duration
+        };
+    } finally { osrmClear(); }
+}
+
+async function fetchRouteChunked(waypoints, signal) {
+    if(!waypoints || waypoints.length < 2) return null;
+    if(waypoints.length <= 10) return fetchSingleRoute(waypoints, signal);
+    
+    addLog(`🚀 Chunked routing attivo: ${waypoints.length} waypoint in batch da max 10`, 'info');
+    const CHUNK_SIZE = 10;
+    const DELAY_BASE_MS = 600; // era 350ms: troppo basso → causa 429 su server pubblici
+    
+    const batches = [];
+    for (let i = 0; i < waypoints.length - 1; i += (CHUNK_SIZE - 1)) {
+        const end = Math.min(i + CHUNK_SIZE, waypoints.length);
+        batches.push(waypoints.slice(i, end));
+        if(end === waypoints.length) break;
+    }
+    
+    addLog(`📦 Generati ${batches.length} segmenti di routing`, 'info');
+    
+    let allPoints = [];
+    let totalDistance = 0;
+    let totalDuration = 0;
+    let successCount = 0;
+    let failCount = 0;
+    
+    for(let idx = 0; idx < batches.length; idx++) {
+        if(signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        
+        const batch = batches[idx];
+        addLog(`🔄 Segmento ${idx+1}/${batches.length} (${batch.length} waypoint)...`, 'info');
+        
+        try {
+            const seg = await fetchSingleRoute(batch, signal);
+            if(seg && seg.points && seg.points.length > 0) {
+                let toAdd = seg.points;
+                if(idx > 0 && allPoints.length > 0) toAdd = seg.points.slice(1);
+                allPoints.push(...toAdd);
+                totalDistance += seg.distance;
+                totalDuration += seg.duration;
+                successCount++;
+                addLog(`✅ Segmento ${idx+1} risolto (+${(seg.distance/1000).toFixed(1)} km)`, 'ok');
+            } else {
+                failCount++;
+                addLog(`⚠️ Segmento ${idx+1} fallito (nessun dato)`, 'warn');
+                if(batch.length >= 2) {
+                    if(allPoints.length === 0) {
+                        allPoints.push({ lat: batch[0].lat, lon: batch[0].lon });
+                        allPoints.push({ lat: batch[batch.length-1].lat, lon: batch[batch.length-1].lon });
+                    } else {
+                        allPoints.push({ lat: batch[batch.length-1].lat, lon: batch[batch.length-1].lon });
+                    }
+                }
+            }
+        } catch(err) {
+            if(err.name === 'AbortError') throw err;
+            failCount++;
+            addLog(`❌ Segmento ${idx+1} errore: ${err.message}`, 'warn');
+            if(batch.length >= 2) {
+                if(allPoints.length === 0) {
+                    allPoints.push({ lat: batch[0].lat, lon: batch[0].lon });
+                    allPoints.push({ lat: batch[batch.length-1].lat, lon: batch[batch.length-1].lon });
+                } else {
+                    allPoints.push({ lat: batch[batch.length-1].lat, lon: batch[batch.length-1].lon });
+                }
+            }
+        }
+        
+        if(idx < batches.length - 1) {
+            // Exponential backoff: delay cresce dopo ogni segmento fallito
+            const delayMs = DELAY_BASE_MS + failCount * 200;
+            await sleep(Math.min(delayMs, 2000));
+        }
+    }
+    
+    if(allPoints.length === 0) return null;
+    addLog(`🏁 Routing completato: ${successCount} OK, ${failCount} falliti | Distanza ${(totalDistance/1000).toFixed(1)} km`, successCount > 0 ? 'ok' : 'warn');
+    return { points: allPoints, distance: totalDistance, duration: totalDuration };
 }
 
 async function updateRoutingAndUI() {
@@ -436,41 +717,84 @@ async function updateRoutingAndUI() {
   const controller = new AbortController();
   _pendingRouting = controller;
   try {
-    addLog('🔄 Ricalcolo percorso stradale...', 'info');
-    const route = await fetchRoute(_currentWaypoints, controller.signal);
+    addLog('🔄 Ricalcolo percorso stradale (chunked mode)...', 'info');
+    const route = await fetchRouteChunked(_currentWaypoints, controller.signal);
     if(_pendingRouting !== controller) return;
-    _currentRoutePoints = route?.points || null;
-    _currentRouteDistance = route?.distance || 0;
-    _currentRouteDuration = route?.duration || 0;
-    $('statDist').textContent = (_currentRouteDistance/1000).toFixed(1) + ' km';
-    const hours = Math.floor(_currentRouteDuration / 3600);
-    const mins = Math.floor((_currentRouteDuration % 3600) / 60);
-    $('statTime').textContent = `${hours}h ${mins.toString().padStart(2,'0')}m`;
-    $('osrmStats').classList.add('on');
-    addLog(`✅ Rotta aggiornata: ${(_currentRouteDistance/1000).toFixed(1)} km`, 'ok');
+    if(route && route.points && route.points.length > 0) {
+      _currentRoutePoints = route.points;
+      _currentRouteDistance = route.distance;
+      _currentRouteDuration = route.duration;
+      $('statDist').textContent = (_currentRouteDistance/1000).toFixed(1) + ' km';
+      const hours = Math.floor(_currentRouteDuration / 3600);
+      const mins = Math.floor((_currentRouteDuration % 3600) / 60);
+      $('statTime').textContent = `${hours}h ${mins.toString().padStart(2,'0')}m`;
+      $('osrmStats').classList.add('on');
+      addLog(`✅ Rotta aggiornata: ${(_currentRouteDistance/1000).toFixed(1)} km · ${_currentRoutePoints.length} punti traccia`, 'ok');
+    } else {
+      _currentRoutePoints = null;
+      addLog('⚠️ Routing fallito su tutti i provider — uso fallback visivo (linea arancione diretta)', 'warn');
+      $('osrmStats').classList.remove('on');
+    }
     initMap();
     await regenerateOutput();
   } catch(e) {
-    if(e.name === 'AbortError') return;
-    addLog(`⚠️ Routing fallito: ${e.message}`, 'warn');
+    if(e.name === 'AbortError') { addLog('⏹️ Routing interrotto (nuova richiesta in coda)', 'dim'); return; }
+    addLog(`⚠️ Errore routing imprevisto: ${e.message}`, 'warn');
     _currentRoutePoints = null;
     initMap();
-  } finally { if(_pendingRouting === controller) _pendingRouting = null; }
+  } finally {
+    if(_pendingRouting === controller) _pendingRouting = null;
+  }
 }
 
+// ██ MAPPA ██
+function initMap() {
+  if(!$('mapPreview').classList.contains('on') || _currentWaypoints.length < 2) return;
+
+  if(!_map) {
+    _map = L.map('mapPreview').setView([_currentWaypoints[0].lat, _currentWaypoints[0].lon], 10);
+    _tileLayerRef = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(_map);
+  }
+
+  _map.eachLayer(l => {
+    if(l === _tileLayerRef) return;
+    _map.removeLayer(l);
+  });
+
+  if(_currentRoutePoints && _currentRoutePoints.length > 0) {
+    L.polyline(_currentRoutePoints.map(p => [p.lat, p.lon]), {
+      color: '#1e5aa8', weight: 5, opacity: 0.9, lineJoin: 'round'
+    }).addTo(_map);
+  } else {
+    L.polyline(_currentWaypoints.map(w => [w.lat, w.lon]), {
+      color: '#f59e0b', weight: 4, dashArray: '8, 12', opacity: 0.85
+    }).addTo(_map);
+  }
+
+  _currentWaypoints.forEach((w, i) => {
+    L.marker([w.lat, w.lon]).addTo(_map).bindPopup(`<b>${esc(w.name)}</b><br>Tappa ${i+1}`);
+  });
+
+  try { _map.fitBounds(L.latLngBounds(_currentWaypoints.map(w => [w.lat, w.lon])).pad(0.12)); } catch(e) {}
+  requestAnimationFrame(() => {
+    setTimeout(() => { _map.invalidateSize(); }, 80);
+  });
+}
+
+// ██ OUTPUT GENERATION ██
 async function regenerateOutput() {
   if(_currentWaypoints.length < 2) return;
   if(_currentFormat === 'kmz' && _currentRoutePoints) {
     const zip = new JSZip();
-    const kml = buildKMZString(_currentWaypoints, _name, _currentRoutePoints);
-    zip.file('doc.kml', kml);
+    zip.file('doc.kml', buildKMZString(_currentWaypoints, _name, _currentRoutePoints));
     _output = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
   } else if(_currentFormat === 'gpx') {
     _output = buildGPXString(_currentWaypoints, _name, _currentRoutePoints);
   } else if(_currentFormat === 'kmz' && !_currentRoutePoints) {
     const zip = new JSZip();
-    const kml = buildKMZString(_currentWaypoints, _name, null);
-    zip.file('doc.kml', kml);
+    zip.file('doc.kml', buildKMZString(_currentWaypoints, _name, null));
     _output = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
   }
   $('dlLabel').textContent = 'Scarica ' + _name.replace(/\s+/g,'_') + '.' + _currentFormat;
@@ -479,9 +803,9 @@ async function regenerateOutput() {
 function buildGPXString(wps, name, routePoints) {
   if(routePoints && routePoints.length > 0) {
     const trkpts = routePoints.map(p => ' <trkpt lat="' + p.lat.toFixed(6) + '" lon="' + p.lon.toFixed(6) + '"/>').join('\n');
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TomTom Route Converter 15.0" xmlns="http://www.topografix.com/GPX/1/1">\n<metadata><name>${esc(name)}</name></metadata>\n<rte>\n<name>${esc(name)}</name>\n${wps.map(w => ' <rtept lat="' + w.lat.toFixed(6) + '" lon="' + w.lon.toFixed(6) + '"><name>' + esc(w.name) + '</name></rtept>').join('\n')}\n</rte>\n<trk>\n<name>${esc(name)} - Traccia</name>\n<trkseg>\n${trkpts}\n</trkseg>\n</trk>\n</gpx>`;
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TomTom Route Converter 16.1" xmlns="http://www.topografix.com/GPX/1/1">\n<metadata><name>${esc(name)}</name></metadata>\n<rte>\n<name>${esc(name)}</name>\n${wps.map(w => ' <rtept lat="' + w.lat.toFixed(6) + '" lon="' + w.lon.toFixed(6) + '"><name>' + esc(w.name) + '</name></rtept>').join('\n')}\n</rte>\n<trk>\n<name>${esc(name)} - Traccia</name>\n<trkseg>\n${trkpts}\n</trkseg>\n</trk>\n</gpx>`;
   }
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TomTom Route Converter 15.0" xmlns="http://www.topografix.com/GPX/1/1">\n<metadata><name>${esc(name)}</name></metadata>\n<rte>\n<name>${esc(name)}</name>\n${wps.map(w => ' <rtept lat="' + w.lat.toFixed(6) + '" lon="' + w.lon.toFixed(6) + '"><name>' + esc(w.name) + '</name></rtept>').join('\n')}\n</rte>\n</gpx>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TomTom Route Converter 16.1" xmlns="http://www.topografix.com/GPX/1/1">\n<metadata><name>${esc(name)}</name></metadata>\n<rte>\n<name>${esc(name)}</name>\n${wps.map(w => ' <rtept lat="' + w.lat.toFixed(6) + '" lon="' + w.lon.toFixed(6) + '"><name>' + esc(w.name) + '</name></rtept>').join('\n')}\n</rte>\n</gpx>`;
 }
 
 function buildKMZString(wps, name, routePoints) {
@@ -491,7 +815,7 @@ function buildKMZString(wps, name, routePoints) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>${esc(name)}</name>\n<Style id="motoLine"><LineStyle><color>ff00a5ff</color><width>5</width></LineStyle></Style>\n${wpPlacemarks}\n${linePlacemark}\n</Document>\n</kml>`;
 }
 
-// ██ UI REFRESH COMPLETA ██
+// ██ UI REFRESH ██
 async function fullStateRefresh() {
   updateWaypointCountWarning();
   await updateRoutingAndUI();
@@ -524,7 +848,12 @@ function refreshInteractiveWaypointsDisplay() {
   });
   list.appendChild(frag);
   list.scrollTop = oldScroll;
-  const badge = _currentWaypoints.length > 20 ? `<span class="wp-count-badge ${_currentWaypoints.length > _wpLimit ? 'critical' : ''}">⚠️ ${_currentWaypoints.length}/${_wpLimit}</span>` : (_currentWaypoints.length <= 20 ? `<span class="wp-count-badge ok">✓ Ottimale</span>` : '');
+  const _cnt = _currentWaypoints.length;
+  const badge = _cnt > _wpLimit
+    ? `<span class="wp-count-badge critical">🔴 ${_cnt}/${_wpLimit}</span>`
+    : _cnt > 20
+      ? `<span class="wp-count-badge warning">⚠️ ${_cnt}/${_wpLimit}</span>`
+      : `<span class="wp-count-badge ok">✓ Ottimale</span>`;
   $('wpLabel').innerHTML = `Tappe (${_currentWaypoints.length})${badge}`;
 }
 
@@ -535,7 +864,7 @@ function updateWaypointCountWarning() {
   else { sm.className = 'status-red on'; icon.textContent = '🔴'; title.textContent = 'LIMITE SUPERATO'; detail.textContent = `MyDrive accetta massimo 29 tappe (ora ${count}). Il file verrà rifiutato. Riduci le tappe.`; }
 }
 
-// ██ DELETE WAYPOINT con UNDO TOAST (Cloude) ██
+// ██ DELETE WAYPOINT ██
 async function deleteWaypoint(index) {
   if(index === 0 || index >= _currentWaypoints.length - 1) { Swal.fire({ icon:'info', title:'Tappa protetta', text:'Start e Fine non eliminabili.', confirmButtonColor:'#1e5aa8' }); return; }
   const waypointName = _currentWaypoints[index].name;
@@ -552,12 +881,7 @@ async function deleteWaypoint(index) {
     _currentWaypoints.splice(index, 1);
     addLog(`Tappa eliminata: "${waypointName}" (ora ${_currentWaypoints.length} tappe)`, 'ok');
     $('convertBtn').disabled = true; $('bIcon').innerHTML = '<div class="spin"></div>'; $('bText').textContent = 'Rigenerazione…';
-    if (_currentFormat === 'kmz' && _currentWaypoints.length >= 2) {
-      try { const osrm = await fetchRoute(_currentWaypoints); _currentRoutePoints = osrm.points; } catch { _currentRoutePoints = null; }
-    } else if(_currentFormat === 'gpx') { _currentRoutePoints = null; }
-    await regenerateOutput();
     await fullStateRefresh();
-    // UNDO TOAST
     const toast = Swal.mixin({ toast: true, position: 'top-end', timer: 5000, showCloseButton: false, showConfirmButton: false, html: `<b>Tappa eliminata</b><br>${esc(waypointName)} rimossa.<br><a href="#" id="undoLink" style="color:var(--p);font-weight:600;margin-top:4px;display:inline-block;">↩ Annulla eliminazione</a>` });
     toast.fire();
     document.getElementById('undoLink')?.addEventListener('click', (e) => {
@@ -577,7 +901,7 @@ async function deleteWaypoint(index) {
   }
 }
 
-// ██ AGGIUNTA TAPPA ██
+// ██ ADD WAYPOINT ██
 function toggleAddWaypointPanel() { $('addWaypointPanel').classList.toggle('open'); }
 function checkAndBlockLimitExceeded() {
   if(_currentWaypoints.length >= _wpLimit) {
@@ -592,7 +916,7 @@ async function addWaypointByAddress() {
   if(!addr) { Swal.fire({ icon:'warning', title:'Inserisci un indirizzo', text:'Digita un luogo da geocodificare', confirmButtonColor:'#1e5aa8' }); return; } 
   addLog(`Geocodifica: "${addr}"`, 'info'); 
   try { 
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1&accept-language=it`, { headers: { 'User-Agent': 'TomTomRouteConverter/15.0' } }); 
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1&accept-language=it`, { headers: { 'User-Agent': 'TomTomRouteConverter/16.1' } }); 
     if(!r.ok) throw new Error(); 
     const data = await r.json(); 
     if(!data.length) throw new Error('Non trovato'); 
@@ -618,21 +942,8 @@ async function addWaypointByCoords() {
   addLog(`➕ Aggiunte coordinate`, 'ok'); 
 }
 
-// ██ MAPPA ██
-function initMap() {
-  if(!$('mapPreview').classList.contains('on') || _currentWaypoints.length < 2) return;
-  if(!_map) { _map = L.map('mapPreview').setView([_currentWaypoints[0].lat, _currentWaypoints[0].lon], 10); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(_map); }
-  _map.eachLayer(l => _map.removeLayer(l));
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(_map);
-  if(_currentRoutePoints && _currentRoutePoints.length > 0) L.polyline(_currentRoutePoints.map(p => [p.lat, p.lon]), { color: '#1e5aa8', weight: 5 }).addTo(_map);
-  else L.polyline(_currentWaypoints.map(w => [w.lat, w.lon]), { color: '#f59e0b', weight: 3, dashArray: '5, 10' }).addTo(_map);
-  _currentWaypoints.forEach((w, i) => { L.marker([w.lat, w.lon]).addTo(_map).bindPopup(`<b>${w.name}</b><br>Tappa ${i+1}`); });
-  _map.fitBounds(L.latLngBounds(_currentWaypoints.map(w => [w.lat, w.lon])).pad(0.1));
-  _map.invalidateSize();
-}
-
-// ██ PARSER ROBUSTI (Cloude parseQuery + unificato) ██
-async function geocode(q) { let query = q.trim(); addLog(`Geocoding: "${query}"`, 'info'); const attempts = [query, query.replace(/,\s*\d{5}.*$/, '').trim(), query.split(',')[0].replace(/\d+/g, '').trim(), query.replace(/[^a-zA-Z\s]/g, ' ').replace(/\s+/g, ' ').trim()]; for(let i=0;i<attempts.length;i++) { const attemptQuery=attempts[i]; if(!attemptQuery||attemptQuery.length<3) continue; try { addLog(` Tentativo ${i+1}: "${attemptQuery}"`, 'dim'); const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(attemptQuery)}&format=json&limit=1&accept-language=it,en`,{headers:{'User-Agent':'TomTomRouteConverter/15.0'}}); if(r.ok){const data=await r.json(); if(data&&data.length>0) return{lat:parseFloat(data[0].lat),lon:parseFloat(data[0].lon),name:data[0].display_name.split(',')[0].trim()}; } } catch(e){} } throw new Error(`Impossibile geocodificare: "${q}"`); }
+// ██ PARSER ██
+async function geocode(q) { let query = q.trim(); addLog(`Geocoding: "${query}"`, 'info'); const attempts = [query, query.replace(/,\s*\d{5}.*$/, '').trim(), query.split(',')[0].replace(/\d+/g, '').trim(), query.replace(/[^a-zA-Z\s]/g, ' ').replace(/\s+/g, ' ').trim()]; for(let i=0;i<attempts.length;i++) { const attemptQuery=attempts[i]; if(!attemptQuery||attemptQuery.length<3) continue; try { addLog(` Tentativo ${i+1}: "${attemptQuery}"`, 'dim'); const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(attemptQuery)}&format=json&limit=1&accept-language=it,en`,{headers:{'User-Agent':'TomTomRouteConverter/16.1'}}); if(r.ok){const data=await r.json(); if(data&&data.length>0) return{lat:parseFloat(data[0].lat),lon:parseFloat(data[0].lon),name:data[0].display_name.split(',')[0].trim()}; } } catch(e){} } throw new Error(`Impossibile geocodificare: "${q}"`); }
 function cleanStopName(stop){if(!stop)return stop;return stop.replace(/,\s*\d{4,5}(?=\s*[,)]|$)/g,'').replace(/\s{2,}/g,' ').trim();}
 function parseDir(url){const match=url.match(/maps\/dir\/([^@?]+)/);if(!match) return null; return match[1].split('/').map(s=>decodeURIComponent(s.replace(/\+/g,' ')).trim()).filter(s=>s&&s.length>0&&!s.startsWith('@')&&!s.includes('data=')).map(cleanStopName).filter(s=>s&&s.length>0);}
 function parseAppleMaps(url){try{const u=new URL(url);if(!u.host.includes('apple.com'))return null;const stops=[];if(u.searchParams.get('q'))stops.push(u.searchParams.get('q'));if(u.searchParams.get('daddr'))stops.push(u.searchParams.get('daddr'));const sll=u.searchParams.get('sll')||u.searchParams.get('ll');if(sll){const[lat,lon]=sll.split(',');stops.unshift(`${lat},${lon}`);}return stops.length>=2?{stops,src:'Apple Maps'}:null;}catch(e){return null;}}
@@ -644,18 +955,123 @@ function coordStr(s){ const m=s.match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/); ret
 function isBlob(s){ return s.includes('data=')||s.includes('!3m')||s.includes('authuser='); }
 function blobCoords(s){ const re=/!1d(-?\d+\.\d+)!2d(-?\d+\.\d+)/g, pairs=[]; let m; while((m=re.exec(s))!==null) pairs.push({lon:parseFloat(m[1]),lat:parseFloat(m[2])}); if(!pairs.length) return null; const p=pairs[pairs.length-1]; return{lat:p.lat,lon:p.lon,name:p.lat.toFixed(5)+','+p.lon.toFixed(5)}; }
 function extractAllWaypointCoords(url){ const re=/!1d(-?\d+\.\d+)!2d(-?\d+\.\d+)/g; const coords=[]; let m; while((m=re.exec(url))!==null) coords.push({lon:parseFloat(m[1]),lat:parseFloat(m[2])}); return coords; }
-function parseGPX(xmlStr){ const doc=new DOMParser().parseFromString(xmlStr,"text/xml"); let pts=[]; const rtepts=doc.getElementsByTagName('rtept'); if(rtepts.length>0){ for(let n of rtepts) pts.push({lat:parseFloat(n.getAttribute('lat')),lon:parseFloat(n.getAttribute('lon')),name:n.getElementsByTagName('name')[0]?.textContent||'Tappa'}); } else { const wpts=doc.getElementsByTagName('wpt'); if(wpts.length>0){ for(let n of wpts) pts.push({lat:parseFloat(n.getAttribute('lat')),lon:parseFloat(n.getAttribute('lon')),name:n.getElementsByTagName('name')[0]?.textContent||'Punto'}); } else { const trkpts=doc.getElementsByTagName('trkpt'); for(let n of trkpts) pts.push({lat:parseFloat(n.getAttribute('lat')),lon:parseFloat(n.getAttribute('lon')),name:'Pt'}); if(pts.length>50) pts=pts.filter((_,i)=>i%Math.floor(pts.length/30)===0); } } return pts; }
-function parseKML(xmlStr){ const doc=new DOMParser().parseFromString(xmlStr,"text/xml"); const placemarks=doc.getElementsByTagName('Placemark'); let pts=[]; for(let pm of placemarks){ const pt=pm.getElementsByTagName('Point')[0]; if(pt){ const coords=pt.getElementsByTagName('coordinates')[0]?.textContent?.trim(); if(coords){ const[lon,lat]=coords.split(',').map(Number); pts.push({lat,lon,name:pm.getElementsByTagName('name')[0]?.textContent||'Luogo'}); } } } if(pts.length===0){ const lines=doc.getElementsByTagName('LineString'); if(lines.length>0){ const coords=lines[0].getElementsByTagName('coordinates')[0]?.textContent?.trim().split(/\s+/); if(coords&&coords.length>0){ pts.push({lat:parseFloat(coords[0].split(',')[1]),lon:parseFloat(coords[0].split(',')[0]),name:'Inizio'}); if(coords.length>1) pts.push({lat:parseFloat(coords[coords.length-1].split(',')[1]),lon:parseFloat(coords[coords.length-1].split(',')[0]),name:'Fine'}); } } } return pts; }
-async function parseFile(file){ const ext=file.name.split('.').pop().toLowerCase(); if(ext==='gpx'||ext==='xml') return parseGPX(await file.text()); else if(ext==='kmz'){ const zip=await JSZip.loadAsync(file); if(!zip.file('doc.kml')) throw new Error('KMZ non valido: manca doc.kml'); return parseKML(await zip.file('doc.kml').async('string')); } else if(ext==='kml') return parseKML(await file.text()); throw new Error('Formato non supportato'); }
 
-// ██ MOTO OPTIMIZE con fallback capped array (Cloude) ██
+// ██ PARSER FILE PRINCIPALE ██
+async function parseFile(file){ 
+  const ext=file.name.split('.').pop().toLowerCase(); 
+  try {
+    if(ext==='gpx'||ext==='xml') {
+      const text = await file.text();
+      addLog(`📄 GPX: ${text.length} caratteri letti`, 'info');
+      const result = parseGPXRobust(text);
+      addLog(`✅ Parsing GPX completato: ${result.waypoints.length} tappe trovate (tipo: ${result.sourceType})`, 'ok');
+      return result;
+    } else if(ext==='kmz'){ 
+      const zip=await JSZip.loadAsync(file); 
+      if(!zip.file('doc.kml')) throw new Error('KMZ non valido: manca doc.kml'); 
+      const kmlText = await zip.file('doc.kml').async('string');
+      addLog(`📄 KML: ${kmlText.length} caratteri letti`, 'info');
+      return { waypoints: parseKML(kmlText), sourceType: 'kml' }; 
+    } else if(ext==='kml') {
+      const kmlText = await file.text();
+      addLog(`📄 KML: ${kmlText.length} caratteri letti`, 'info');
+      return { waypoints: parseKML(kmlText), sourceType: 'kml' };
+    }
+    throw new Error('Formato non supportato: usa GPX, KML o KMZ'); 
+  } catch(e) {
+    addLog(`❌ Errore parsing file: ${e.message}`, 'warn');
+    throw e;
+  }
+}
+
+function parseKML(xmlStr){ 
+  xmlStr = xmlStr.replace(/^\uFEFF/, '');
+  const doc=new DOMParser().parseFromString(xmlStr,"text/xml"); 
+  const parserError = doc.querySelector('parsererror');
+  if (parserError) throw new Error('KML malformato');
+  
+  const placemarks=doc.getElementsByTagName('Placemark'); 
+  let pts=[]; 
+  for(let pm of placemarks){ 
+    const pt=pm.getElementsByTagName('Point')[0]; 
+    if(pt){ 
+      const coords=pt.getElementsByTagName('coordinates')[0]?.textContent?.trim(); 
+      if(coords){ 
+        const[lon,lat]=coords.split(',').map(Number); 
+        pts.push({lat,lon,name:pm.getElementsByTagName('name')[0]?.textContent||'Luogo'}); 
+      } 
+    } 
+  } 
+  if(pts.length===0){ 
+    const lines=doc.getElementsByTagName('LineString'); 
+    if(lines.length>0){ 
+      const coords=lines[0].getElementsByTagName('coordinates')[0]?.textContent?.trim().split(/\s+/); 
+      if(coords&&coords.length>0){ 
+        pts.push({lat:parseFloat(coords[0].split(',')[1]),lon:parseFloat(coords[0].split(',')[0]),name:'Inizio'}); 
+        if(coords.length>1) pts.push({lat:parseFloat(coords[coords.length-1].split(',')[1]),lon:parseFloat(coords[coords.length-1].split(',')[0]),name:'Fine'}); 
+      } 
+    } 
+  } 
+  if(pts.length===0) throw new Error('Nessun punto trovato nel KML');
+  return pts; 
+}
+
+// ██ MOTORCYCLE OPTIMIZE ██
 function getDistanceMeters(p1,p2){ const R=6371000; const dLat=(p2.lat-p1.lat)*Math.PI/180; const dLon=(p2.lon-p1.lon)*Math.PI/180; const a=Math.sin(dLat/2)**2+Math.cos(p1.lat*Math.PI/180)*Math.cos(p2.lat*Math.PI/180)*Math.sin(dLon/2)**2; return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
 function calculateTurningAngle(p1,p2,p3){ const dx1=p2.lon-p1.lon,dy1=p2.lat-p1.lat,dx2=p3.lon-p2.lon,dy2=p3.lat-p2.lat; const dot=dx1*dx2+dy1*dy2; const mag1=Math.sqrt(dx1*dx1+dy1*dy1),mag2=Math.sqrt(dx2*dx2+dy2*dy2); if(mag1===0||mag2===0) return 0; const cosAngle=Math.max(-1,Math.min(1,dot/(mag1*mag2))); return Math.acos(cosAngle)*(180/Math.PI); }
 function perpendicularDistance(point,lineStart,lineEnd){ const R=6371000; const latMid=(lineStart.lat+lineEnd.lat)/2*Math.PI/180; const toX=lon=>lon*Math.PI/180*R*Math.cos(latMid); const toY=lat=>lat*Math.PI/180*R; const px=toX(point.lon),py=toY(point.lat); const ax=toX(lineStart.lon),ay=toY(lineStart.lat); const bx=toX(lineEnd.lon),by=toY(lineEnd.lat); const dx=bx-ax,dy=by-ay; const mag=Math.sqrt(dx*dx+dy*dy); if(mag===0) return Math.sqrt((px-ax)**2+(py-ay)**2); const u=((px-ax)*dx+(py-ay)*dy)/(mag*mag); const cx=ax+u*dx,cy=ay+u*dy; return Math.sqrt((px-cx)**2+(py-cy)**2); }
 function douglasPeucker(points, tolerance){ if(points.length<=2) return points; let maxDist=0,maxIndex=0; const start=points[0],end=points[points.length-1]; for(let i=1;i<points.length-1;i++){ const dist=perpendicularDistance(points[i],start,end); if(dist>maxDist){ maxDist=dist; maxIndex=i; } } if(maxDist>tolerance){ const left=douglasPeucker(points.slice(0,maxIndex+1),tolerance); const right=douglasPeucker(points.slice(maxIndex),tolerance); return left.slice(0,-1).concat(right); } else { return [start,end]; } }
-function motoOptimize(points,sourceType){ if(points.length<=2) return points; addLog('Avvio semplificazione Moto-Optimized...','info'); let filtered=[points[0]]; for(let i=1;i<points.length;i++){ if(getDistanceMeters(filtered[filtered.length-1],points[i])>=30) filtered.push(points[i]); } addLog(`Filtro 30m: ${points.length} → ${filtered.length}`,'dim'); const angularKept=[filtered[0]]; for(let i=1;i<filtered.length-1;i++){ const angle=calculateTurningAngle(filtered[i-1],filtered[i],filtered[i+1]); if(angle<160) angularKept.push(filtered[i]); } angularKept.push(filtered[filtered.length-1]); let result=angularKept; if(result.length>_wpLimit){ addLog(`⚠️ Il percorso supera il limite di ${_wpLimit} tappe di MyDrive. Applico riduzione automatica...`,'warn'); let tolerance=0.00001; let decimated=result; while(decimated.length>_wpLimit&&tolerance<0.01){ decimated=douglasPeucker(result,tolerance); tolerance*=1.8; } if(decimated.length>_wpLimit){ const step=(decimated.length-2)/(_wpLimit-2); const capped=[decimated[0]]; for(let i=1;i<_wpLimit-1;i++) capped.push(decimated[Math.round(i*step)]); capped.push(decimated[decimated.length-1]); decimated=capped; } result=decimated; addLog(`⛔ PERCORSO ACCORCIATO a ${result.length} tappe per rispettare il limite MyDrive di ${_wpLimit} tappe.`,'warn'); } return result; }
+function motoOptimize(points, sourceType) {
+  if(points.length <= 2) return points;
+  addLog('Avvio semplificazione Moto-Optimized...', 'info');
 
-// ██ MAIN FLOW con blocco preventivo ██
+  // BUG FIX: se la sorgente e' un file GPX con <rtept>, i punti sono waypoint
+  // esplicitamente scelti dall'utente — NON vanno filtrati angolarmente.
+  // Il filtro angolare (angle < 160deg) e' pensato per track-point ad alta densita'.
+  const isUserDefinedWaypoints = (sourceType === 'rtept' || sourceType === 'wpt');
+
+  let filtered = [points[0]];
+  for(let i = 1; i < points.length; i++) {
+    if(getDistanceMeters(filtered[filtered.length-1], points[i]) >= 30) filtered.push(points[i]);
+  }
+  addLog(`Filtro 30m: ${points.length} → ${filtered.length}`, 'dim');
+
+  let result = filtered;
+
+  // Filtro angolare: SOLO su track-point ad alta densita', mai su waypoint utente
+  if(!isUserDefinedWaypoints && filtered.length > 3) {
+    const angularKept = [filtered[0]];
+    for(let i = 1; i < filtered.length - 1; i++) {
+      const angle = calculateTurningAngle(filtered[i-1], filtered[i], filtered[i+1]);
+      if(angle < 160) angularKept.push(filtered[i]);
+    }
+    angularKept.push(filtered[filtered.length - 1]);
+    result = angularKept;
+    addLog(`Filtro angolare: ${filtered.length} → ${result.length}`, 'dim');
+  }
+
+  if(result.length > _wpLimit) {
+    addLog(`Applicazione riduzione automatica Douglas-Peucker (${result.length} → max ${_wpLimit})...`, 'warn');
+    let tolerance = 0.00001;
+    let decimated = result;
+    while(decimated.length > _wpLimit && tolerance < 0.01) {
+      decimated = douglasPeucker(result, tolerance);
+      tolerance *= 1.8;
+    }
+    if(decimated.length > _wpLimit) {
+      const step = (decimated.length - 2) / (_wpLimit - 2);
+      const capped = [decimated[0]];
+      for(let i = 1; i < _wpLimit - 1; i++) capped.push(decimated[Math.round(i * step)]);
+      capped.push(decimated[decimated.length - 1]);
+      decimated = capped;
+    }
+    result = decimated;
+    addLog(`PERCORSO ACCORCIATO a ${result.length} tappe per rispettare il limite MyDrive di ${_wpLimit}.`, 'warn');
+  }
+  return result;
+}
+
+// ██ MAIN FLOW ██
 async function go() {
   const file = $('fileInput').files[0];
   let urlVal = $('urlIn').value.trim();
@@ -666,9 +1082,12 @@ async function go() {
   const btn=$('convertBtn'); btn.disabled=true; $('bIcon').innerHTML='<div class="spin"></div>'; $('bText').textContent='Elaborazione…'; setProgress(5);
   try{
     let wps=[];
+    let gpxSourceType = 'url';
     if(file){
       addLog('Lettura file: '+file.name,'ok');
-      wps=await parseFile(file);
+      const parsed = await parseFile(file);
+      wps = parsed.waypoints;
+      gpxSourceType = parsed.sourceType;
       addLog('Trovate '+wps.length+' tappe nel file','ok'); setProgress(40);
     } else {
       if(isShortUrl(urlVal)){ urlVal=$('expandedUrlIn').value.trim(); if(!urlVal) throw new Error('Incolla la URL espansa'); }
@@ -694,7 +1113,7 @@ async function go() {
       const confirmReduce = await Swal.fire({ title: `Limite MyDrive superato (${wps.length}/${_wpLimit})`, text: `Il percorso ha ${wps.length} tappe, ma MyDrive accetta massimo ${_wpLimit}. Il tool applicherà una riduzione automatica, ma potresti perdere alcune tappe intermedie. Procedere?`, icon: 'warning', showCancelButton: true, confirmButtonText: 'Sì, riduci automaticamente', cancelButtonText: 'Annulla e modifica', confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280' });
       if (!confirmReduce.isConfirmed) throw new Error('Operazione annullata: superato limite MyDrive');
     }
-    wps = motoOptimize(wps, file ? 'gpx' : 'url');
+    wps = motoOptimize(wps, file ? gpxSourceType : 'url');
     _currentWaypoints = [...wps];
     $('mapPreview').classList.add('on');
     $('results').classList.add('on');
@@ -702,7 +1121,12 @@ async function go() {
     await fullStateRefresh();
     setProgress(100);
     saveToHistory();
-  } catch(err){ $('progressCard').classList.remove('on'); $('errorTxt').textContent=err.message; $('errorCard').classList.add('on'); }
+  } catch(err){ 
+    $('progressCard').classList.remove('on'); 
+    $('errorTxt').innerHTML=err.message; 
+    $('errorCard').classList.add('on');
+    console.error('Errore:', err);
+  }
   finally{ btn.disabled=false; $('bIcon').textContent='▶'; $('bText').textContent=_currentFormat==='gpx'?'Esporta per TomTom':'Esporta per Google Earth'; }
 }
 
@@ -715,8 +1139,10 @@ $('fileInput').addEventListener('change',function(e){ const file=e.target.files[
 $('urlIn').addEventListener('input',function(){ const isShort=isShortUrl(this.value.trim()); $('shortUrlArea').style.display=isShort?'block':'none'; if(isShort&&!this.value.trim().endsWith('/')){ $('expandedUrlIn').focus(); } });
 function openExpander(){ const url=$('urlIn').value.trim(); if(url) window.open('https://www.expandurl.net/?url='+encodeURIComponent(url),'_blank'); }
 function download(){ if(!_output) return; Swal.fire({icon:'success', title:`Download avviato ✓`, html:`<strong>${esc(_name)}.${_currentFormat}</strong><br>${_currentWaypoints.length} tappe`, timer:2000, showConfirmButton:false, toast:true, position:'top-end' }); const fn=_name.replace(/\s+/g,'_')+'.'+_currentFormat; const blob=_currentFormat==='kmz'?_output:new Blob([_output],{type:'application/gpx+xml'}); const _dlUrl=URL.createObjectURL(blob); const a=Object.assign(document.createElement('a'),{href:_dlUrl,download:fn}); document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(_dlUrl),30000); }
-if('serviceWorker' in navigator){ const swCode=`const CACHE='route-conv-v15';const PRECACHE=['https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js','https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js','https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(PRECACHE)).then(()=>self.skipWaiting())));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.url.includes('nominatim')||e.request.url.includes('valhalla')||e.request.url.includes('osrm')||e.request.url.includes('openstreetmap.org/'))return;e.respondWith(caches.match(e.request).then(cached=>cached||fetch(e.request)));});`; const blob=new Blob([swCode],{type:'application/javascript'}); navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'}).catch(()=>{}); }
-setFormat('gpx'); updateModelLimit(); if(isIOS()) $('iosHint').classList.add('on');
+
+setFormat('gpx'); 
+updateModelLimit(); 
+if(isIOS()) $('iosHint').classList.add('on');
 </script>
 </body>
 </html>
