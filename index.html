@@ -44,7 +44,33 @@ border-bottom: 1px solid rgba(255,255,255,0.15);
 .header-sub { font-size: clamp(9px,2vw,11px); color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: .1em; margin-top: 1px; }
 .header-pill { margin-left: auto; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 3px 11px; font-size: 10px; color: #fff; letter-spacing: .04em; }
 main { max-width: 720px; margin: 0 auto; width: 100%; padding: clamp(18px,4vw,36px) clamp(14px,4vw,36px) calc(clamp(18px,4vw,36px) + var(--safe-b)); }
-.info { background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px; font-size: clamp(11.5px,2vw,13px); line-height: 1.75; color: var(--text-sec); box-shadow: var(--shadow); }
+.info-toggle-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--p-light); border: 1.5px solid var(--border-light);
+  border-radius: 10px; padding: 9px 15px; margin-bottom: 10px;
+  cursor: pointer; font-family: inherit; font-size: clamp(11.5px,2vw,13px);
+  color: var(--p); font-weight: 600; width: 100%; text-align: left;
+  transition: background .18s, border-color .18s;
+}
+.info-toggle-btn:hover { background: #d4e8ff; border-color: var(--border); }
+.info-toggle-btn .info-toggle-arrow {
+  margin-left: auto; font-size: 10px; transition: transform .22s ease;
+  display: inline-block;
+}
+.info-toggle-btn.open .info-toggle-arrow { transform: rotate(180deg); }
+.info-panel {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height .35s cubic-bezier(0.4,0,0.2,1), opacity .25s ease, margin-bottom .25s ease;
+  opacity: 0;
+  margin-bottom: 0;
+}
+.info-panel.open {
+  max-height: 200px;
+  opacity: 1;
+  margin-bottom: 16px;
+}
+.info { background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px 18px; font-size: clamp(11.5px,2vw,13px); line-height: 1.75; color: var(--text-sec); box-shadow: var(--shadow); }
 .info b { color: var(--text-main); }
 .accordion-card { background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow); overflow: hidden; }
 .accordion-card summary { padding: 14px 18px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--p); user-select: none; }
@@ -215,10 +241,16 @@ outline: none;
 </div>
 </header>
 <main>
-<div class="info">
-⚠️ <b>IMPORTANTE:</b> TomTom MyDrive attuale accetta massimo <b>29 waypoint</b> (inclusi partenza e arrivo). Il tool rispetta questo limite.
-<br>📌 <b>Editor GIS Reattivo:</b> modifica tappe, trascina, rinomina, aggiungi punti: la mappa e il file si aggiornano in tempo reale.
-<br>🔧 <b>v16.2 FIX:</b> 7 bug risolti: badge CSS, extractName scope, invalidateSize timing, fetch timeout, rate-limit backoff, motoOptimize su rtept.
+<button class="info-toggle-btn" id="infoToggleBtn" onclick="toggleInfoPanel()" aria-expanded="false" aria-controls="infoPanel">
+  ℹ️ Note importanti &amp; changelog v16.2
+  <span class="info-toggle-arrow">▼</span>
+</button>
+<div class="info-panel" id="infoPanel" role="region" aria-labelledby="infoToggleBtn">
+  <div class="info">
+    ⚠️ <b>IMPORTANTE:</b> TomTom MyDrive attuale accetta massimo <b>29 waypoint</b> (inclusi partenza e arrivo). Il tool rispetta questo limite.
+    <br>📌 <b>Editor GIS Reattivo:</b> modifica tappe, trascina, rinomina, aggiungi punti: la mappa e il file si aggiornano in tempo reale.
+    <br>🔧 <b>v16.2 FIX:</b> 7 bug risolti: badge CSS, extractName scope, invalidateSize timing, fetch timeout, rate-limit backoff, motoOptimize su rtept.
+  </div>
 </div>
 <details class="accordion-card">
 <summary>📖 Come importare nel navigatore / Google Earth</summary>
@@ -329,6 +361,28 @@ outline: none;
 // ███████████████████████████████████████████████████████████████████████████
 
 const $ = id => document.getElementById(id);
+
+// ██ INFO PANEL TOGGLE ██
+function toggleInfoPanel() {
+  const btn = $('infoToggleBtn');
+  const panel = $('infoPanel');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  btn.setAttribute('aria-expanded', String(!isOpen));
+  try { localStorage.setItem('infoPanel_open', String(!isOpen)); } catch(e) {}
+}
+// Ripristina stato al caricamento (default: chiuso)
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const saved = localStorage.getItem('infoPanel_open');
+    if (saved === 'true') {
+      $('infoPanel').classList.add('open');
+      $('infoToggleBtn').classList.add('open');
+      $('infoToggleBtn').setAttribute('aria-expanded', 'true');
+    }
+  } catch(e) {}
+});
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
